@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snapshot · Bewerbungs-Dashboard — T. Blechmann</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--surface:#f8f9fa;--surface2:#f1f3f5;--surface3:#e9ecef;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.2);
+  --text:#0d0f12;--text2:#212529;--text3:#495057;
+  --accent:#3955d6;
+  --green:#0a6b3d;--amber:#9a6300;--red:#b32525;--teal:#0a7d6b;--orange:#b54a14;--blue:#2a7fff;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --r:10px;--rl:16px;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.app-title h1{font-size:16px;font-weight:600;letter-spacing:-0.02em}
+.app-title span{font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:12px}
+.header-actions{display:flex;gap:8px;align-items:center}
+.btn{font-family:var(--sans);font-size:13px;font-weight:500;padding:8px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.btn:hover{background:var(--surface3);border-color:rgba(0,0,0,0.25)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#3d5ce0}
+.btn-sm{padding:5px 10px;font-size:12px}
+.main{padding:24px 32px;max-width:1500px;margin:0 auto}
+/* Status KPI row — 8 Karten */
+.kpi-row{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-bottom:12px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi-card.c-total::before{background:var(--accent)}
+.kpi-card.c-open::before{background:#5a9e60}
+.kpi-card.c-applied::before{background:var(--teal)}
+.kpi-card.c-interview::before{background:var(--amber)}
+.kpi-card.c-onsite::before{background:var(--green)}
+.kpi-card.c-angebot::before{background:var(--blue)}
+.kpi-card.c-nofeedback::before{background:var(--orange)}
+.kpi-card.c-rejected::before{background:var(--red)}
+.kpi-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+.kpi-value{font-family:var(--mono);font-size:26px;font-weight:500;line-height:1;margin-bottom:3px}
+.kpi-card.c-total .kpi-value{color:var(--accent)}
+.kpi-card.c-open .kpi-value{color:#5a9e60}
+.kpi-card.c-applied .kpi-value{color:var(--teal)}
+.kpi-card.c-interview .kpi-value{color:var(--amber)}
+.kpi-card.c-onsite .kpi-value{color:var(--green)}
+.kpi-card.c-angebot .kpi-value{color:var(--blue)}
+.kpi-card.c-nofeedback .kpi-value{color:var(--orange)}
+.kpi-card.c-rejected .kpi-value{color:var(--red)}
+.kpi-sub{font-size:10px;font-weight:500;color:var(--text3);font-family:var(--mono)}
+.kpi-sub2{font-size:10px;color:var(--amber);font-family:var(--mono);margin-top:2px}
+.kpi-sub3{font-size:10px;color:var(--orange);font-family:var(--mono);margin-top:2px}
+/* Performance KPI row — KPI 1–4 */
+.perf-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+.perf-kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden}
+.perf-kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.perf-kpi-card.good::before{background:var(--green)}
+.perf-kpi-card.warn::before{background:var(--amber)}
+.perf-kpi-card.poor::before{background:var(--red)}
+.perf-kpi-card.neutral::before{background:var(--accent)}
+.perf-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+.perf-value{font-family:var(--mono);font-size:26px;font-weight:500;line-height:1;margin-bottom:3px}
+.perf-kpi-card.good .perf-value{color:var(--green)}
+.perf-kpi-card.warn .perf-value{color:var(--amber)}
+.perf-kpi-card.poor .perf-value{color:var(--red)}
+.perf-kpi-card.neutral .perf-value{color:var(--accent)}
+.perf-sub{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.perf-target{font-size:9px;color:var(--text3);font-family:var(--mono);margin-top:6px;border-top:1px solid var(--border);padding-top:5px}
+/* Charts + layout */
+.charts-row{display:grid;grid-template-columns:1.7fr 1fr;gap:14px;margin-bottom:20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:20px 22px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em}
+.card-subtitle{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.chart-wrap{position:relative;width:100%}
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.add-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em}
+.form-group input,.form-group select{font-family:var(--sans);font-size:13px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:8px 11px;outline:none;transition:border-color 0.15s}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+.form-group select option{background:var(--surface2)}
+.form-group.full{grid-column:1/-1}
+.form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-backdrop.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--rl);padding:24px 28px;width:540px;max-width:92vw;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:14px;font-weight:600;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--text3);margin-bottom:18px;font-family:var(--mono)}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+/* Timeline */
+.timeline{margin:8px 0 18px;padding:0;list-style:none;border-left:2px solid var(--border2);padding-left:14px}
+.timeline-item{position:relative;padding:6px 0;font-size:12px;color:var(--text2)}
+.timeline-item::before{content:'';position:absolute;left:-19px;top:11px;width:8px;height:8px;border-radius:50%;background:var(--text3)}
+.timeline-item.t-applied::before{background:#2ecfb0}
+.timeline-item.t-interview::before{background:#f5a623}
+.timeline-item.t-onsite::before{background:#22c87a}
+.timeline-item.t-angebot::before{background:var(--blue)}
+.timeline-item.t-nofeedback::before{background:#f07832}
+.timeline-item.t-rejected::before{background:#f05252}
+.timeline-item.t-withdrawn::before{background:#7C5CBF}
+.timeline-item.t-followup::before{background:#f07832}
+.timeline-item.t-open::before{background:#5a9e60}
+.timeline-item.t-excluded::before{background:#3a3a4a}
+.timeline-date{font-family:var(--mono);font-size:11px;color:var(--text3);margin-right:8px}
+.timeline-type{font-weight:500;color:var(--text)}
+.timeline-note{display:block;font-size:11px;color:var(--text3);margin-top:2px}
+.timeline-delete{float:right;background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 4px;font-family:var(--mono)}
+.timeline-delete:hover{color:var(--red)}
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;padding:0 10px 10px 0;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 10px 9px 0;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(0,0,0,0.025)}
+tr.row-excluded td{opacity:0.38}
+.company-name{color:var(--text);font-weight:500}
+.delete-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 5px;border-radius:4px;transition:all 0.15s;font-family:var(--mono)}
+.delete-btn:hover{color:var(--red);background:rgba(240,82,82,0.1)}
+.timeline-btn{background:none;border:1px solid var(--border2);color:var(--text2);cursor:pointer;font-size:11px;padding:3px 8px;border-radius:4px;transition:all 0.15s;font-family:var(--mono)}
+.timeline-btn:hover{background:var(--surface3);color:var(--text);border-color:rgba(0,0,0,0.25)}
+.badge-nf{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;color:var(--orange);background:rgba(240,120,50,0.12);border:1px solid rgba(240,120,50,0.3);border-radius:3px;padding:1px 5px}
+/* Misc */
+.legend-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.section-line{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-line h2{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap}
+.section-line::after{content:'';flex:1;height:1px;background:var(--border)}
+.empty-state{text-align:center;padding:28px;color:var(--text3);font-size:13px}
+.table-wrap{overflow-x:auto}
+.filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filter-btn{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;transition:all 0.15s}
+.filter-btn:hover,.filter-btn.active{background:var(--surface3);color:var(--text);border-color:rgba(0,0,0,0.25)}
+.excl-toggle{font-family:var(--mono);font-size:10px;color:var(--text3);cursor:pointer;margin-left:auto;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:transparent}
+.excl-toggle:hover{color:var(--text2)}
+.backup-status{font-family:var(--mono);font-size:10px;color:var(--text3);padding:0 4px;display:inline-flex;align-items:center;gap:5px}
+.backup-status.warn{color:var(--amber)}
+.backup-status.crit{color:var(--red)}
+.backup-status::before{content:'●';font-size:9px}
+.backup-banner{background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.3);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--amber);display:none;align-items:center;justify-content:space-between;gap:12px}
+.backup-banner.show{display:flex}
+.backup-banner.crit{background:rgba(240,82,82,0.1);border-color:rgba(240,82,82,0.3);color:var(--red)}
+.add-event-section{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-top:8px}
+.add-event-section h4{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px}
+.add-event-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.add-event-grid .form-group.full{grid-column:1/-1}
+/* Quellen-Analyse */
+.quellen-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:24px}
+.delete-btn,.timeline-btn,.excl-toggle,.backup-banner,.modal-backdrop{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- Edit Entry Modal -->
+<div class="modal-backdrop" id="edit-modal">
+  <div class="modal">
+    <h3>Eintrag bearbeiten</h3>
+    <div class="modal-sub" id="edit-modal-sub"></div>
+    <div class="add-event-grid">
+      <div class="form-group"><label>Unternehmen</label><input type="text" id="edit-company"></div>
+      <div class="form-group"><label>Position</label><input type="text" id="edit-role"></div>
+      <div class="form-group"><label>Quelle</label><input type="text" id="edit-source"></div>
+      <div class="form-group"><label>Ort / Region</label><input type="text" id="edit-location"></div>
+      <div class="form-group"><label>Gehaltsspanne</label><input type="text" id="edit-salary"></div>
+      <div class="form-group"><label>Priorität</label>
+        <select id="edit-priority"><option value="">-</option><option value="hoch">Hoch</option><option value="mittel">Mittel</option><option value="gering">Gering</option></select>
+      </div>
+      <div class="form-group full"><label>Notiz</label><input type="text" id="edit-note"></div>
+      <div class="form-group full">
+        <label>Warum ausgeschieden?</label>
+        <select id="edit-exitreason">
+          <option value="">— nicht angegeben —</option>
+          <option value="Gehalt">Gehalt</option>
+          <option value="Region">Region</option>
+          <option value="Interner Kandidat">Interner Kandidat</option>
+          <option value="Cultural Fit">Cultural Fit</option>
+          <option value="Überqualifiziert">Überqualifiziert</option>
+          <option value="Branchenhintergrund">Branchenhintergrund</option>
+          <option value="Keine Rückmeldung">Keine Rückmeldung</option>
+          <option value="Sonstiges">Sonstiges</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-sm" onclick="closeEditModal()">Abbrechen</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEdit()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Timeline / Add Event Modal -->
+<div class="modal-backdrop" id="timeline-modal">
+  <div class="modal">
+    <h3 id="modal-title">Termine &amp; Status</h3>
+    <div class="modal-sub" id="modal-company"></div>
+    <div style="margin-bottom:6px">
+      <div class="card-title" style="font-size:10px;margin-bottom:10px">Verlauf</div>
+      <ul class="timeline" id="modal-timeline"></ul>
+    </div>
+    <div class="add-event-section">
+      <h4>Neuer Termin / Statuswechsel</h4>
+      <div class="add-event-grid">
+        <div class="form-group">
+          <label>Typ *</label>
+          <select id="ev-type">
+            <option value="applied">Beworben</option>
+            <option value="interview">Interview</option>
+            <option value="onsite">Vor-Ort-Termin</option>
+            <option value="angebot">Angebot</option>
+            <option value="followup">Nachgefasst</option>
+            <option value="nofeedback">Kein Feedback</option>
+            <option value="rejected">Absage (vom Arbeitgeber)</option>
+            <option value="withdrawn">Eigenabsage (eigene Entscheidung)</option>
+            <option value="excluded">Nicht bewerben</option>
+            <option value="open">Offen (zurücksetzen)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Datum *</label>
+          <input type="date" id="ev-date" required>
+        </div>
+        <div class="form-group full">
+          <label>Notiz (optional)</label>
+          <input type="text" id="ev-note" placeholder="z.B. TeamsCall mit Hr. Hodek">
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-sm" onclick="closeTimelineModal()">Schließen</button>
+      <button class="btn btn-primary btn-sm" onclick="addEvent()">Termin hinzufügen</button>
+    </div>
+  </div>
+</div>
+
+<header class="app-header">
+  <div class="app-title">
+    <h1>Bewerbungs-Dashboard</h1>
+    <span>Thorsten Blechmann — Aktive Jobsuche 2026</span>
+  </div>
+  <div class="header-actions"><span style="font-family:var(--mono);font-size:12px;color:var(--text3)">Snapshot · Stand: 06.06.2026, 15:27</span></div></header>
+
+<main class="main">
+  <div class="backup-banner" id="backup-banner">
+    <div id="backup-banner-text"></div>
+    <button class="btn btn-sm" onclick="saveBackup()" style="background:rgba(0,0,0,0.08);border-color:currentColor;color:inherit">Jetzt sichern</button>
+  </div>
+
+  <!-- Status KPI Row — 8 Karten -->
+  <div class="kpi-row">
+    <div class="kpi-card c-total"><div class="kpi-label">Gesamt</div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-sub">ohne Ausschlüsse</div></div>
+    <div class="kpi-card c-open"><div class="kpi-label">Offen</div><div class="kpi-value" id="kpi-open">0</div><div class="kpi-sub">noch nicht beworben</div></div>
+    <div class="kpi-card c-applied"><div class="kpi-label">Beworben</div><div class="kpi-value" id="kpi-applied">0</div><div class="kpi-sub">eingereicht</div></div>
+    <div class="kpi-card c-interview"><div class="kpi-label">Interview</div><div class="kpi-value" id="kpi-interview">0</div><div class="kpi-sub">aktive Prozesse</div><div class="kpi-sub2" id="kpi-int-count"></div></div>
+    <div class="kpi-card c-onsite"><div class="kpi-label">Vor Ort</div><div class="kpi-value" id="kpi-onsite">0</div><div class="kpi-sub">Termine gesamt</div><div class="kpi-sub2" id="kpi-onsite-count"></div></div>
+    <div class="kpi-card c-angebot"><div class="kpi-label">Angebot</div><div class="kpi-value" id="kpi-angebot">0</div><div class="kpi-sub">erhalten</div></div>
+    <div class="kpi-card c-nofeedback"><div class="kpi-label">Kein Feedback</div><div class="kpi-value" id="kpi-nofeedback">0</div><div class="kpi-sub">Stille</div><div class="kpi-sub3" id="kpi-nf-followup"></div></div>
+    <div class="kpi-card c-rejected"><div class="kpi-label">Absage</div><div class="kpi-value" id="kpi-rejected">0</div><div class="kpi-sub">abgelehnt</div></div>
+  </div>
+
+  <!-- Performance KPI Row — KPI 1–4 -->
+  <div class="perf-row">
+    <div class="perf-kpi-card neutral" id="perf-iq-card">
+      <div class="perf-label">KPI 1 &middot; Interviewquote</div>
+      <div class="perf-value" id="perf-iq-val">&#8212;</div>
+      <div class="perf-sub" id="perf-iq-sub">Interviews / Bewerbungen</div>
+      <div class="perf-target">Soll: 20 %</div>
+    </div>
+    <div class="perf-kpi-card neutral" id="perf-voq-card">
+      <div class="perf-label">KPI 2 &middot; Vor-Ort-Quote</div>
+      <div class="perf-value" id="perf-voq-val">&#8212;</div>
+      <div class="perf-sub" id="perf-voq-sub">Vor-Ort / Interviews</div>
+      <div class="perf-target">Soll: 40 %</div>
+    </div>
+    <div class="perf-kpi-card neutral" id="perf-aq-card">
+      <div class="perf-label">KPI 3 &middot; Angebotsquote</div>
+      <div class="perf-value" id="perf-aq-val">&#8212;</div>
+      <div class="perf-sub" id="perf-aq-sub">Angebote / Vor-Ort</div>
+      <div class="perf-target">Ziel: &gt; 0 %</div>
+    </div>
+    <div class="perf-kpi-card neutral" id="perf-rt-card">
+      <div class="perf-label">KPI 4 &middot; &Oslash; Reaktionszeit</div>
+      <div class="perf-value" id="perf-rt-val">&#8212;</div>
+      <div class="perf-sub" id="perf-rt-sub">Tage bis Erstkontakt</div>
+      <div class="perf-target">Bewerbung &#8594; Feedback</div>
+    </div>
+  </div>
+
+  <!-- Add Entry Form -->
+  <div id="add-form-section" style="display:none;margin-bottom:20px">
+    <div class="card">
+      <div class="section-line" style="margin-bottom:16px"><h2>Neuer Eintrag</h2></div>
+      <div class="add-form">
+        <div class="form-group"><label>Unternehmen</label><input type="text" id="f-company"></div>
+        <div class="form-group"><label>Position</label><input type="text" id="f-role"></div>
+        <div class="form-group"><label>Quelle</label><input type="text" id="f-source"></div>
+        <div class="form-group"><label>Initial-Status</label>
+          <select id="f-status">
+            <option value="open">Offen</option>
+            <option value="applied">Beworben</option>
+            <option value="excluded">Nicht bewerben</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Datum</label><input type="date" id="f-date"></div>
+        <div class="form-group"><label>Ort / Region</label><input type="text" id="f-location"></div>
+        <div class="form-group"><label>Gehaltsspanne</label><input type="text" id="f-salary"></div>
+        <div class="form-group"><label>Priorität</label>
+          <select id="f-priority"><option value="">-</option><option value="hoch">Hoch</option><option value="mittel">Mittel</option><option value="gering">Gering</option></select>
+        </div>
+        <div class="form-group full"><label>Notiz</label><input type="text" id="f-note"></div>
+        <div class="form-actions">
+          <button class="btn btn-sm" onclick="toggleAddForm()">Abbrechen</button>
+          <button class="btn btn-primary btn-sm" onclick="addEntry()">Speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <div class="card"><div class="card-header"><div class="card-title">Aktivit&#228;ten nach Status &#8212; Histogramm</div></div><div class="chart-wrap" style="height:220px"><canvas id="barChart"></canvas></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Verteilung in % &#8212; Kreisdiagramm</div></div><div class="chart-wrap" style="height:180px"><canvas id="pieChart"></canvas></div><div class="legend-row" id="pie-legend"></div></div>
+  </div>
+
+  <!-- Funnel + Week -->
+  <div class="bottom-row">
+    <div class="card"><div class="card-header"><div class="card-title">Konversions-Funnel</div><span id="conv-rate" class="card-subtitle"></span></div><div id="funnel-container"></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Wochenverlauf (ISO-KW)</div><span id="week-filter-info" class="card-subtitle"></span></div><div class="chart-wrap" style="height:200px"><canvas id="weekChart"></canvas></div></div>
+  </div>
+
+  <!-- KPI 5 — Quellen-Analyse -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="section-line" style="margin-bottom:14px"><h2>KPI 5 &middot; Quellen-Analyse</h2></div>
+    <div class="quellen-grid">
+      <div>
+        <div class="card-title" style="margin-bottom:12px">Headhunter-Ranking</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Quelle</th>
+              <th style="text-align:center">Offen</th>
+              <th style="text-align:center">Bew.</th>
+              <th style="text-align:center">Interv.</th>
+              <th style="text-align:center">I-Quote</th>
+              <th style="text-align:center">Vor-Ort</th>
+              <th style="text-align:center">V-Quote</th>
+              <th style="text-align:center">Angebote</th>
+              <th style="text-align:center">Absagen</th>
+            </tr></thead>
+            <tbody id="quellen-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="card-title" style="margin-bottom:12px">Warum ausgeschieden?</div>
+        <div id="exit-reasons-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alle Eintr&#228;ge -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Alle Eintr&#228;ge</div>
+      <span id="entry-count" class="card-subtitle"></span>
+    </div>
+    <div class="filter-row" id="filter-row"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Datum</th><th>Unternehmen</th><th>Position</th><th>Quelle</th><th>Ort</th><th>Gehalt</th><th>Prio</th><th>Status</th><th>Termine</th><th>NF</th><th>Notiz</th><th></th></tr></thead>
+        <tbody id="entry-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+const BAKED_DATA=[{"id":1001,"company":"Leopold Advisors, Hamburg","role":"Leiter Fertigung / Produktionsleiter","source":"Firmen HP","location":"2. Familie BG / 45 km","salary":"","priority":"","note":"","history":[{"type":"applied","date":"2026-04-06","note":""},{"type":"rejected","date":"2026-04-20","note":"kein Feedback erhalten"}],"exitReason":"Keine Rückmeldung"},{"id":1002,"company":"Jobsign, Singen","role":"Produktionsleiter CH","source":"Jobsign","location":"Nähe Jungs / 230 km","salary":"","priority":"","note":"","history":[{"type":"applied","date":"2026-04-06","note":""},{"type":"rejected","date":"2026-04-20","note":"kein Feedback erhalten"}],"exitReason":"Keine Rückmeldung"},{"id":1003,"company":"Ferchau - 98-98716-DUS_DI, Höxter","role":"Leiter Planung, Produktion & Service","source":"Ferchau","location":"160 km","salary":"","priority":"","note":"nicht mehr auf der HP","history":[{"type":"applied","date":"2026-04-13","note":""},{"type":"rejected","date":"2026-04-27","note":"kein Feedback"}],"exitReason":"Keine Rückmeldung"},{"id":1004,"company":"HAPEKO - T VO26-181159, Hamm","role":"Werksleiter","source":"HAPEKO","location":"Pendeldistanz / 40 km","salary":"","priority":"","note":"","history":[{"type":"applied","date":"2026-04-13","note":""},{"type":"rejected","date":"2026-04-15","note":""}],"exitReason":"Keine Rückmeldung"},{"id":1005,"company":"Liebherr Aerospace Lindenberg GmbH","role":"Leiter Arbeitsvorbereitung","source":"Firmen HP","location":"Nähe Jungs / 150 km","salary":"","priority":"","note":"","history":[{"type":"applied","date":"2026-04-06","note":""},{"type":"rejected","date":"2026-04-20","note":""}],"exitReason":"Überqualifiziert"},{"id":1006,"company":"KNDS München","role":"Leiter Arbeitsvorbereitung - Industrial Engineering","source":"Firmen HP","location":"Nähe Jungs / 60 km","salary":"","priority":"","note":"","history":[{"type":"applied","date":"2026-04-09","note":""},{"type":"rejected","date":"2026-04-20","note":""}],"exitReason":"Überqualifiziert"},{"id":1007,"company":"RIMOWA, Köln","role":"Produktionsleiter","source":"Firmen HP","location":"1. Familie BG / 60 km","salary":"","priority":"","note":"","history":[{"type":"open","date":"2026-05-04","note":"identifiziert"},{"type":"applied","date":"2026-06-01","note":"über das Portal beworben"}],"exitReason":""},{"id":1008,"company":"Max Steier GmbH, Elmshorn","role":"Betriebsleiter","source":"Firmen HP","location":"2. Familie BG / 30 km","salary":"60-85k (Ansage 100k)","priority":"","note":"","history":[{"type":"applied","date":"2026-05-06","note":""},{"type":"followup","date":"2026-06-03","note":"per Mail bei Hr. Dormann nachgefasst"}],"exitReason":""},{"id":1009,"company":"Rheinmetall Brandt GmbH, Bergheim","role":"Produktionsleiter","source":"","location":"Pendeldistanz / 110 km","salary":"","priority":"","note":"Sparte wird gerade verkauft, ungewisse Zukunft","history":[{"type":"excluded","date":"2026-05-09","note":"nicht bewerben"}],"exitReason":""},{"id":1010,"company":"Time Consult, Frankfurt","role":"Produktionsmanager","source":"","location":"250 km","salary":"","priority":"","note":"keine regionalen Anker","history":[{"type":"excluded","date":"2026-05-09","note":"nicht bewerben"}],"exitReason":""},{"id":1011,"company":"Witt & Sohn, Pinneberg","role":"Produktionsleiter","source":"Firmen HP","location":"2. Familie BG / 40 km","salary":"61-82k","priority":"","note":"","history":[{"type":"applied","date":"2026-05-11","note":""},{"type":"followup","date":"2026-06-03","note":"Status-Nachfrage an Fr. Lietzke"}],"exitReason":""},{"id":1012,"company":"NESPOLI, Dinkelsbühl","role":"Werksleiter","source":"Firmen HP","location":"Nähe Jungs / 120 km","salary":"","priority":"","note":"","history":[{"type":"applied","date":"2026-05-11","note":""},{"type":"followup","date":"2026-06-03","note":"wahrscheinlich ist meine Bewerbung im Portal hängen geblieben, daher nochmal per Mail versendet"}],"exitReason":""},{"id":1013,"company":"Hitachi, Brilon","role":"Operationsmanager","source":"","location":"Pendeldistanz / 72 km","salary":"","priority":"","note":"abgelaufen","history":[{"type":"excluded","date":"2026-05-12","note":"abgelaufen"}],"exitReason":""},{"id":1014,"company":"CH Excellence - Aluminium, Unna","role":"Produktionsleiter","source":"","location":"Pendeldistanz / 20 km","salary":"","priority":"","note":"Chinesische Mutter ist insolvent","history":[{"type":"excluded","date":"2026-05-12","note":"nicht bewerben"}],"exitReason":""},{"id":1015,"company":"Hymer, Bad Waldsee","role":"Werksleiter","source":"","location":"Nähe Jungs / 130 km","salary":"","priority":"","note":"laufende Krise, unklares Mandat, CFO-Wechsel","history":[{"type":"excluded","date":"2026-05-12","note":"nicht bewerben"}],"exitReason":""},{"id":1016,"company":"Leuze Electronic, Owen","role":"Werksleiter","source":"Firmen HP","location":"Nähe Jungs / 150 km","salary":"91-144k","priority":"mittel","note":"Voranfrage geschickt","history":[{"type":"open","date":"2026-05-12","note":"identifiziert"},{"type":"open","date":"2026-06-03","note":"Vorabanfrage an Frau Ruf geschickt"},{"type":"followup","date":"2026-06-03","note":""}],"exitReason":""},{"id":1017,"company":"Tenneco, Blumberg","role":"Produktionsleitung","source":"","location":"260 km","salary":"78-121k","priority":"","note":"keine regionalen Anker","history":[{"type":"excluded","date":"2026-05-12","note":"nicht bewerben"}],"exitReason":""},{"id":1018,"company":"Mentis 250903-J, Nordbayern","role":"Bereichsleiter Produktion und Supply Chain","source":"Mentis","location":"Nähe Jungs / 300 km","salary":"","priority":"","note":"","history":[{"type":"applied","date":"2026-05-06","note":""},{"type":"rejected","date":"2026-05-15","note":""}],"exitReason":"Keine Rückmeldung"},{"id":1019,"company":"HAYS 872407/1, Hannover","role":"Produktionsleiter (Clarios VARTA)","source":"HAYS","location":"2. Familie BG / 200 km","salary":"130-135k + Bonus","priority":"","note":"","history":[{"type":"applied","date":"2026-05-08","note":""},{"type":"interview","date":"2026-05-18","note":"TeamsCall"},{"type":"rejected","date":"2026-05-22","note":"Zurückgezogen"}],"exitReason":"Interner Kandidat"},{"id":1020,"company":"Dr. Maier - 14668, östl. BW","role":"Bereichsleiter Produktion (RUD, Aalen?)","source":"Dr.Maier","location":"Nähe Jungs / 130 km","salary":"Ansage 110-135k + Bonus+DW","priority":"hoch","note":"Feedback dauert noch","history":[{"type":"applied","date":"2026-05-18","note":""},{"type":"followup","date":"2026-06-03","note":"per Mail nachgefasst"}],"exitReason":""},{"id":1021,"company":"Winkelmann MSR Technology GmbH, Ahlen","role":"Head of Production","source":"Firmen HP","location":"Pendeldistanz / 62 km","salary":"Ansage 100-115k (35h) + Bonus + DW","priority":"","note":"","history":[{"type":"applied","date":"2026-05-18","note":""}],"exitReason":""},{"id":1022,"company":"LSV GmbH, Oberndorf am Lech","role":"Werkleiter","source":"Firmen HP","location":"Nähe Jungs / 55 km","salary":"85-110k + DW// Ansage 115k€+DW","priority":"hoch","note":"","history":[{"type":"open","date":"2026-05-18","note":"identifiziert"},{"type":"applied","date":"2026-06-02","note":"via Portal"}],"exitReason":""},{"id":1023,"company":"HAPEKO PP26-181021, Aschaffenburg","role":"Produktionsleiter - KOPP GmbH","source":"HAPEKO","location":"Nähe Jungs / 360 km","salary":"110-130k + DW (Ansage 125k+DW)","priority":"hoch","note":"on-hold wegen Cyberangriff","history":[{"type":"applied","date":"2026-05-06","note":""},{"type":"interview","date":"2026-05-21","note":"Interview"},{"type":"followup","date":"2026-06-16","note":"KW25 nachfassen geplant"},{"type":"interview","date":"2026-05-31","note":"Nachricht an Hr. Paul, weiteres Interesse"}],"exitReason":""},{"id":1024,"company":"DrHeimeier 7526-06907, Gütersloh","role":"Produktionsleiter","source":"Dr. Heimeier","location":"95 km","salary":"64-117k","priority":"","note":"keine regionalen Anker","history":[{"type":"excluded","date":"2026-05-18","note":"nicht bewerben"}],"exitReason":""},{"id":1025,"company":"Dolezych, Dortmund","role":"Produktionsleiter","source":"Firmen HP","location":"Pendeldistanz / 52 km","salary":"85k (Ansage 95k + Bonus)","priority":"","note":"","history":[{"type":"applied","date":"2026-04-01","note":""},{"type":"interview","date":"2026-04-27","note":"TeamsCall"},{"type":"followup","date":"2026-05-20","note":"nachgefasst"},{"type":"rejected","date":"2026-05-28","note":""}],"exitReason":"Gehalt"},{"id":1026,"company":"Alfons Haar, Hamburg","role":"Betriebsleitung","source":"Firmen HP","location":"2. Familie BG / 45 km","salary":"90-130k","priority":"","note":"","history":[{"type":"applied","date":"2026-05-21","note":""}],"exitReason":""},{"id":1027,"company":"DIS, Hannover","role":"Produktionsleiter (Clarios VARTA)","source":"DIS","location":"2. Familie BG / 200 km","salary":"130-135k + Bonus","priority":"","note":"interne Besetzung","history":[{"type":"applied","date":"2026-05-08","note":""},{"type":"interview","date":"2026-05-18","note":"TeamsCall"},{"type":"rejected","date":"2026-05-22","note":"interne Besetzung"}],"exitReason":"Interner Kandidat"},{"id":1028,"company":"Hillebrandt GmbH, Greven","role":"Produktionsleiter","source":"Firmen HP","location":"Pendeldistanz / 90 km","salary":"","priority":"","note":"","history":[{"type":"applied","date":"2026-05-12","note":""},{"type":"rejected","date":"2026-05-20","note":""}],"exitReason":"Keine Rückmeldung"},{"id":1029,"company":"BRUSS Sealing Systems, Hoisdorf","role":"Produktionsleiter","source":"Firmen HP","location":"2. Familie BG / 60 km","salary":"Ansage 100k","priority":"","note":"","history":[{"type":"applied","date":"2026-04-15","note":""},{"type":"interview","date":"2026-04-22","note":""},{"type":"onsite","date":"2026-04-29","note":"Vor-Ort-Termin"},{"type":"followup","date":"2026-05-15","note":"nachgefasst nach Ghosting"},{"type":"rejected","date":"2026-05-20","note":""}],"exitReason":"Gehalt"},{"id":1030,"company":"HAPEKO_26-182245, Osnabrück","role":"Leiter Produktion / Head of Operations","source":"HAPEKO","location":"150 km","salary":"110-130k + DW","priority":"mittel","note":"Fragen gestellt","history":[{"type":"open","date":"2026-05-22","note":"identifiziert"},{"type":"open","date":"2026-05-30","note":"Fragen geschickt"},{"type":"rejected","date":"2026-06-03","note":"über 200 Bewerbungen und Prozeß ist schon weit fortgeschritten"}],"exitReason":"Sonstiges"},{"id":1031,"company":"Jungheinrich, Norderstedt","role":"Leiter Produktion","source":"Firmen HP","location":"2. Familie BG / 30 km","salary":"130-160k (Ansage 130k)","priority":"hoch","note":"","history":[{"type":"applied","date":"2026-05-28","note":""}],"exitReason":""},{"id":1032,"company":"MU_DE_24468, Wiehl","role":"Leiter Produktionsplanung (KIND/GMH)","source":"Mercuri Urval","location":"Pendeldistanz / 110 km","salary":"115k+Bonus (IST 110k)","priority":"hoch","note":"","history":[{"type":"applied","date":"2026-05-22","note":""},{"type":"interview","date":"2026-05-29","note":"TeamsCall Hr. Prinz"},{"type":"interview","date":"2026-06-09","note":"TeamsCall mit Hr. Hodek"}],"exitReason":""},{"id":1033,"company":"DrHeimeier 7225-06684, Braunschweig","role":"Produktionsleiter","source":"Dr. Heimeier","location":"240 km","salary":"120-130k","priority":"","note":"","history":[{"type":"applied","date":"2026-05-22","note":""},{"type":"rejected","date":"2026-05-28","note":""}],"exitReason":"Keine Rückmeldung"},{"id":1034,"company":"J.D. Neuhaus GmbH & Co. KG, Witten","role":"Head of Production","source":"Firmen HP","location":"Pendeldistanz / 55 km","salary":"85-120k","priority":"","note":"","history":[{"type":"applied","date":"2026-05-23","note":""},{"type":"rejected","date":"2026-05-26","note":""}],"exitReason":"Gehalt"},{"id":1035,"company":"HAPEKO_26-182282, Kassel","role":"Bereichsleiter Fertigung und Instandhaltung","source":"HAPEKO","location":"140 km","salary":"100-140k + DW","priority":"hoch","note":"01.06.26 krankheitsbedingt ausgefallen > 08.06.26","history":[{"type":"applied","date":"2026-05-23","note":""},{"type":"interview","date":"2026-06-08","note":"war am 01.06.26 krank, neuer Termin 08.06.26"},{"type":"followup","date":"2026-06-02","note":""}],"exitReason":""},{"id":1036,"company":"HAPEKO_26-183217, Augsburg","role":"Betriebsleiter (SEDAK?)","source":"HAPEKO","location":"Nähe Jungs / 35 km","salary":"90-120k (Ansage 120k)","priority":"mittel","note":"","history":[{"type":"applied","date":"2026-05-28","note":""},{"type":"rejected","date":"2026-06-01","note":"per Mail"}],"exitReason":"Gehalt"},{"id":1780249339691,"company":"HERBERT DAMMANN GmbH, Buxtehude","role":"Produktionsleiter im Bereich Maschinenbau","source":"Firmen HP","location":"2. Familie BG / 97km","salary":"Ansage 118k€+Paket","priority":"mittel","note":"Fragen geschickt, Insolvenzantrag am 29.05.26 gestellt","history":[{"type":"open","date":"2026-05-30","note":""},{"type":"followup","date":"2026-05-30","note":"Vorabanfrage geschickt"},{"type":"excluded","date":"2026-06-04","note":"neue Info: Insolvenzantrag am 29.05.26 gestellt"}],"exitReason":""},{"id":1780249406047,"company":"GI-RO Technik GmbH & Co. KG, Vreden","role":"Produktionsleiter","source":"Firmen HP","location":"Pendeldistanz / 150km","salary":"105k€???","priority":"mittel","note":"Vorabanfrage geschickt","history":[{"type":"open","date":"2026-05-30","note":""},{"type":"followup","date":"2026-05-30","note":"Vorabanfrage geschickt"}],"exitReason":""},{"id":1780249488155,"company":"ARI-Armaturen Albert Richter GmbH & Co. KG, 33758 Schloß Holte-Stukenbrock","role":"Abteilungsleiter eines Produktionsbereichs","source":"Firmen HP","location":"Pendeldistanz / 116km","salary":"85–105 k€ ?","priority":"mittel","note":"Vorabanfrage geschickt","history":[{"type":"open","date":"2026-05-30","note":""},{"type":"followup","date":"2026-05-30","note":"Vorabanfrage geschickt"}],"exitReason":""},{"id":1780249730422,"company":"Kögel Trailer GmbH, Burtenbach","role":"Fertigungsleiter","source":"Firmen HP","location":"Nähe Jungs / 40km","salary":"bis 120k€ ausgewiesen","priority":"hoch","note":"","history":[{"type":"applied","date":"2026-05-31","note":""}],"exitReason":""},{"id":1780318362088,"company":"phg Peter Hengstler GmbH + Co. KG, Deißlingen","role":"Produktionsleiter","source":"Firmen HP","location":"Nähe Jungs/ 230km","salary":"105k€???","priority":"mittel","note":"Vorabanfrage geschickt","history":[{"type":"open","date":"2026-06-01","note":""},{"type":"followup","date":"2026-06-01","note":"Vorabanfrage geschickt"}],"exitReason":""},{"id":1780411991100,"company":"BELIMO, Großröhrsdorf","role":"Head of Operations","source":"Firmen HP","location":"kein Anker, Sachsen","salary":"über 105k€???","priority":"gering","note":"Vorabanfrage geschickt","history":[{"type":"open","date":"2026-06-02","note":""},{"type":"followup","date":"2026-06-02","note":""}],"exitReason":""},{"id":1780412709840,"company":"HB-Feinmechanik GmbH & Co. KG, Metten","role":"Head of Operational Excellence / Produktionsleiter","source":"Firmen HP","location":"Nähe Jungs / 200km","salary":"Ansage 110k€","priority":"gering","note":"Fragen geschickt","history":[{"type":"open","date":"2026-05-31","note":""},{"type":"rejected","date":"2026-06-02","note":"Stelle schon besetzt"}],"exitReason":"Region"},{"id":1780433329278,"company":"Randstad_C01276564_Jena","role":"Leiter Fertigung","source":"Randstadt","location":"kein Anker","salary":"90–128k€","priority":"gering","note":"Vorabfragen geschickt","history":[{"type":"open","date":"2026-06-02","note":""},{"type":"followup","date":"2026-06-02","note":""}],"exitReason":""},{"id":1780484775541,"company":"HOLMER Maschinenbau GmbH, Schierling","role":"Leitung Produktion","source":"Firmen HP","location":"Nähe Junge / 150km","salary":"Ansage 105k€+Bonus+DW","priority":"mittel","note":"08.06.26 Vorabanfrage geschickt","history":[{"type":"open","date":"2026-06-02","note":""},{"type":"applied","date":"2026-06-08","note":"Prozess weit fortgeschritten, Rückprüfung wenn Kandidatenausfall"}],"exitReason":""},{"id":1780578917974,"company":"OG Recruitment S.à r.l. , Trier","role":"Head of Manufacturing Planning","source":"OG Recruitment","location":"1. Familie BG / 120 km","salary":"75,5 – 110k€","priority":"gering","note":"Vorabanfrage geschickt","history":[{"type":"open","date":"2026-06-04","note":""},{"type":"followup","date":"2026-06-04","note":""}],"exitReason":""},{"id":1780584077142,"company":"Franz Kiel GmbH, Nördlingen","role":"Leitung Produktion","source":"Firmen HP","location":"Nähe Jungs / 75km","salary":"Ansage 110k€","priority":"gering","note":"","history":[{"type":"open","date":"2026-06-04","note":""},{"type":"applied","date":"2026-06-04","note":"via Portal"}],"exitReason":""},{"id":1780587380507,"company":"HOERBIGER Flow Control GmbH, Altenstadt","role":"Produktionsleiter","source":"Firmen HP","location":"Nähe Jungs / 70km","salary":"120-130k€","priority":"mittel","note":"Vorabanfrage geschickt","history":[{"type":"open","date":"2026-06-04","note":""},{"type":"followup","date":"2026-06-04","note":"Vorabfragen geschickt"}],"exitReason":""},{"id":1780652301675,"company":"HAPEKO 26-182294, Dortmund","role":"Betriebsleiter Metallumfeld, Hüttenbrauck Profil GmbH, Unna","source":"HAPEKO","location":"Pendeldistanz 18km","salary":"90k Fix + 10k€ Variable","priority":"hoch","note":"Vorabanfrage geschickt","history":[{"type":"open","date":"2026-06-05","note":""},{"type":"followup","date":"2026-06-05","note":""},{"type":"interview","date":"2026-06-05","note":"Telefonat mit Herrn Bergjohann"},{"type":"applied","date":"2026-06-05","note":"stellt mich heute noch vor"}],"exitReason":""},{"id":1780653935128,"company":"HAPEKO 26-183266, Leipzig","role":"Betriebsleiter / Head of Production, Maschinen- und Anlagenbau","source":"HAPEKO","location":"kein Anker","salary":"Ansage 110–115 k€ Fix+DW","priority":"gering","note":"Voranfrage geschickt","history":[{"type":"open","date":"2026-06-05","note":""},{"type":"followup","date":"2026-06-05","note":""}],"exitReason":""},{"id":1780655272379,"company":"Dr. Maier-14704, Oberpfalz","role":"Werkleitung","source":"Dr.Maier","location":"Nähe Jungs / 160km","salary":"Ansage  115k€ Fix inkl. DW, Basis 40 h/Woche","priority":"gering","note":"Vorabanfrage geschickt","history":[{"type":"open","date":"2026-06-05","note":""},{"type":"followup","date":"2026-06-05","note":""}],"exitReason":""},{"id":1780732834047,"company":"Lear Corporation, Bremen","role":"Produktionsleiter","source":"Firmen HP","location":"","salary":"Ansage 110–125 k€ Fix + Bonus + DW","priority":"gering","note":"","exitReason":"","history":[{"type":"open","date":"2026-06-06","note":""},{"type":"applied","date":"2026-06-06","note":"via Portal"}]},{"id":1780739565154,"company":"pro-beam GmbH & Co. KGaA, Magdeburg","role":"Produktionsleiter","source":"Firmen HP","location":"kein Anker","salary":"?","priority":"gering","note":"Vorabanfrage geschickt","exitReason":"","history":[{"type":"open","date":"2026-06-06","note":""},{"type":"followup","date":"2026-06-06","note":"Vorabanfrage geschickt"}]}];
+const SC={
+  open:      {label:'Offen',         color:'#5a9e60'},
+  applied:   {label:'Beworben',       color:'#2ecfb0'},
+  interview: {label:'Interview',      color:'#f5a623'},
+  onsite:    {label:'Vor-Ort-Termin', color:'#22c87a'},
+  angebot:   {label:'Angebot',        color:'#2a7fff'},
+  followup:  {label:'Nachgefasst',    color:'#f07832'},
+  nofeedback:{label:'Kein Feedback',  color:'#f07832'},
+  rejected:  {label:'Absage',         color:'#f05252'},
+  withdrawn: {label:'Eigenabsage',    color:'#7C5CBF'},
+  excluded:  {label:'Nicht bewerben', color:'#3a3a4a'}
+};
+const STATUS_RANK={open:0,applied:1,interview:2,onsite:3,angebot:4,nofeedback:1,rejected:99,withdrawn:99,excluded:99};
+
+const SEED=[
+  {id:1001,company:"Leopold Advisors, Hamburg",role:"Leiter Fertigung / Produktionsleiter",source:"",location:"2. Familie BG / 45 km",salary:"",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-04-06",note:""},{type:"rejected",date:"2026-04-20",note:"kein Feedback erhalten"}]},
+  {id:1002,company:"Jobsign, Singen",role:"Produktionsleiter CH",source:"",location:"Nähe Jungs / 230 km",salary:"",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-04-06",note:""},{type:"rejected",date:"2026-04-20",note:"kein Feedback erhalten"}]},
+  {id:1003,company:"Ferchau - 98-98716-DUS_DI, Höxter",role:"Leiter Planung, Produktion & Service",source:"",location:"160 km",salary:"",priority:"",note:"nicht mehr auf der HP",exitReason:"",history:[{type:"applied",date:"2026-04-13",note:""},{type:"rejected",date:"2026-04-27",note:"kein Feedback"}]},
+  {id:1004,company:"HAPEKO - T VO26-181159, Hamm",role:"Werksleiter",source:"HAPEKO",location:"Pendeldistanz / 40 km",salary:"",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-04-13",note:""},{type:"rejected",date:"2026-04-15",note:""}]},
+  {id:1005,company:"Liebherr Aerospace Lindenberg GmbH",role:"Leiter Arbeitsvorbereitung",source:"",location:"Nähe Jungs / 150 km",salary:"",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-04-06",note:""},{type:"rejected",date:"2026-04-20",note:""}]},
+  {id:1006,company:"KNDS München",role:"Leiter Arbeitsvorbereitung - Industrial Engineering",source:"",location:"Nähe Jungs / 60 km",salary:"",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-04-09",note:""},{type:"rejected",date:"2026-04-20",note:""}]},
+  {id:1007,company:"RIMOWA, Köln",role:"Produktionsleiter",source:"",location:"1. Familie BG / 60 km",salary:"",priority:"",note:"",exitReason:"",history:[{type:"open",date:"2026-05-04",note:"identifiziert"}]},
+  {id:1008,company:"Max Steier GmbH, Elmshorn",role:"Betriebsleiter",source:"",location:"2. Familie BG / 30 km",salary:"60-85k (Ansage 100k)",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-06",note:""}]},
+  {id:1009,company:"Rheinmetall Brandt GmbH, Bergheim",role:"Produktionsleiter",source:"",location:"Pendeldistanz / 110 km",salary:"",priority:"",note:"Sparte wird gerade verkauft, ungewisse Zukunft",exitReason:"",history:[{type:"excluded",date:"2026-05-09",note:"nicht bewerben"}]},
+  {id:1010,company:"Time Consult, Frankfurt",role:"Produktionsmanager",source:"",location:"250 km",salary:"",priority:"",note:"keine regionalen Anker",exitReason:"Region",history:[{type:"excluded",date:"2026-05-09",note:"nicht bewerben"}]},
+  {id:1011,company:"Witt & Sohn, Pinneberg",role:"Produktionsleiter",source:"",location:"2. Familie BG / 40 km",salary:"61-82k",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-11",note:""}]},
+  {id:1012,company:"NESPOLI, Dinkelsbühl",role:"Werksleiter",source:"",location:"Nähe Jungs / 120 km",salary:"",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-11",note:""}]},
+  {id:1013,company:"Hitachi, Brilon",role:"Operationsmanager",source:"",location:"Pendeldistanz / 72 km",salary:"",priority:"",note:"abgelaufen",exitReason:"",history:[{type:"excluded",date:"2026-05-12",note:"abgelaufen"}]},
+  {id:1014,company:"CH Excellence - Aluminium, Unna",role:"Produktionsleiter",source:"",location:"Pendeldistanz / 20 km",salary:"",priority:"",note:"Chinesische Mutter ist insolvent",exitReason:"",history:[{type:"excluded",date:"2026-05-12",note:"nicht bewerben"}]},
+  {id:1015,company:"Hymer, Bad Waldsee",role:"Werksleiter",source:"",location:"Nähe Jungs / 130 km",salary:"",priority:"",note:"laufende Krise, unklares Mandat, CFO-Wechsel",exitReason:"",history:[{type:"excluded",date:"2026-05-12",note:"nicht bewerben"}]},
+  {id:1016,company:"Leuze Electronic, Owen",role:"Werksleiter",source:"",location:"Nähe Jungs / 150 km",salary:"91-144k",priority:"",note:"",exitReason:"",history:[{type:"open",date:"2026-05-12",note:"identifiziert"}]},
+  {id:1017,company:"Tenneco, Blumberg",role:"Produktionsleitung",source:"",location:"260 km",salary:"78-121k",priority:"",note:"keine regionalen Anker",exitReason:"Region",history:[{type:"excluded",date:"2026-05-12",note:"nicht bewerben"}]},
+  {id:1018,company:"Mentis 250903-J, Nordbayern",role:"Bereichsleiter Produktion und Supply Chain",source:"",location:"Nähe Jungs / 300 km",salary:"",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-06",note:""},{type:"rejected",date:"2026-05-15",note:""}]},
+  {id:1019,company:"HAYS 872407/1, Hannover",role:"Produktionsleiter (Clarios VARTA)",source:"HAYS",location:"2. Familie BG / 200 km",salary:"130-135k + Bonus",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-08",note:""},{type:"interview",date:"2026-05-18",note:"TeamsCall"},{type:"rejected",date:"2026-05-22",note:"Zurückgezogen"}]},
+  {id:1020,company:"Dr. Maier - 14668, östl. BW",role:"Bereichsleiter Produktion (RUD, Aalen?)",source:"Dr. Maier",location:"Nähe Jungs / 130 km",salary:"Ansage 110-135k + Bonus+DW",priority:"hoch",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-18",note:""}]},
+  {id:1021,company:"Winkelmann MSR Technology GmbH, Ahlen",role:"Head of Production",source:"",location:"Pendeldistanz / 62 km",salary:"Ansage 100-115k (35h) + Bonus + DW",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-18",note:""}]},
+  {id:1022,company:"LSV GmbH, Oberndorf am Lech",role:"Werkleiter",source:"",location:"Nähe Jungs / 55 km",salary:"85-110k + DW",priority:"",note:"",exitReason:"",history:[{type:"open",date:"2026-05-18",note:"identifiziert"}]},
+  {id:1023,company:"HAPEKO PP26-181021, Aschaffenburg",role:"Produktionsleiter - KOPP GmbH",source:"HAPEKO",location:"Nähe Jungs / 360 km",salary:"110-130k + DW (Ansage 125k+DW)",priority:"hoch",note:"on-hold wegen Cyberangriff",exitReason:"",history:[{type:"applied",date:"2026-05-06",note:""},{type:"interview",date:"2026-05-21",note:"Interview"},{type:"followup",date:"2026-06-16",note:"KW25 nachfassen geplant"}]},
+  {id:1024,company:"DrHeimeier 7526-06907, Gütersloh",role:"Produktionsleiter",source:"Dr. Heimeier",location:"95 km",salary:"64-117k",priority:"",note:"keine regionalen Anker",exitReason:"Region",history:[{type:"excluded",date:"2026-05-18",note:"nicht bewerben"}]},
+  {id:1025,company:"Dolezych, Dortmund",role:"Produktionsleiter",source:"",location:"Pendeldistanz / 52 km",salary:"85k (Ansage 95k + Bonus)",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-04-01",note:""},{type:"interview",date:"2026-04-27",note:"TeamsCall"},{type:"followup",date:"2026-05-20",note:"nachgefasst"},{type:"rejected",date:"2026-05-28",note:""}]},
+  {id:1026,company:"Alfons Haar, Hamburg",role:"Betriebsleitung",source:"",location:"2. Familie BG / 45 km",salary:"90-130k",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-21",note:""}]},
+  {id:1027,company:"DIS, Hannover",role:"Produktionsleiter (Clarios VARTA)",source:"DIS",location:"2. Familie BG / 200 km",salary:"130-135k + Bonus",priority:"",note:"interne Besetzung",exitReason:"Interner Kandidat",history:[{type:"applied",date:"2026-05-08",note:""},{type:"interview",date:"2026-05-18",note:"TeamsCall"},{type:"rejected",date:"2026-05-22",note:"interne Besetzung"}]},
+  {id:1028,company:"Hillebrandt GmbH, Greven",role:"Produktionsleiter",source:"",location:"Pendeldistanz / 90 km",salary:"",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-12",note:""},{type:"rejected",date:"2026-05-20",note:""}]},
+  {id:1029,company:"BRUSS Sealing Systems, Hoisdorf",role:"Produktionsleiter",source:"",location:"2. Familie BG / 60 km",salary:"Ansage 100k",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-04-15",note:""},{type:"interview",date:"2026-04-22",note:""},{type:"onsite",date:"2026-04-29",note:"Vor-Ort-Termin"},{type:"followup",date:"2026-05-15",note:"nachgefasst nach Ghosting"},{type:"rejected",date:"2026-05-20",note:""}]},
+  {id:1030,company:"HAPEKO_26-182245, Osnabrück",role:"Leiter Produktion / Head of Operations",source:"HAPEKO",location:"150 km",salary:"110-130k + DW",priority:"",note:"Fragen klären",exitReason:"",history:[{type:"open",date:"2026-05-22",note:"identifiziert"}]},
+  {id:1031,company:"Jungheinrich, Norderstedt",role:"Leiter Produktion",source:"",location:"2. Familie BG / 30 km",salary:"130-160k (Ansage 130k)",priority:"hoch",note:"Fragen klären",exitReason:"",history:[{type:"applied",date:"2026-05-28",note:""}]},
+  {id:1032,company:"MU_DE_24468, Wiehl",role:"Leiter Produktionsplanung (KIND/GMH)",source:"MU",location:"Pendeldistanz / 110 km",salary:"115k+Bonus (IST 110k)",priority:"hoch",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-22",note:""},{type:"interview",date:"2026-05-29",note:"TeamsCall Hr. Prinz"},{type:"interview",date:"2026-06-05",note:"TeamsCall Hr. Hodek geplant"}]},
+  {id:1033,company:"DrHeimeier 7225-06684, Braunschweig",role:"Produktionsleiter",source:"Dr. Heimeier",location:"240 km",salary:"120-130k",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-22",note:""},{type:"rejected",date:"2026-05-28",note:""}]},
+  {id:1034,company:"J.D. Neuhaus GmbH & Co. KG, Witten",role:"Head of Production",source:"",location:"Pendeldistanz / 55 km",salary:"85-120k",priority:"",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-23",note:""},{type:"rejected",date:"2026-05-26",note:""}]},
+  {id:1035,company:"HAPEKO_26-182282, Kassel",role:"Bereichsleiter Fertigung und Instandhaltung",source:"HAPEKO",location:"140 km",salary:"100-140k + DW",priority:"hoch",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-23",note:""},{type:"interview",date:"2026-06-01",note:""}]},
+  {id:1036,company:"HAPEKO_26-183217, Augsburg",role:"Betriebsleiter (SEDAK?)",source:"HAPEKO",location:"Nähe Jungs / 35 km",salary:"90-120k (Ansage 120k)",priority:"mittel",note:"",exitReason:"",history:[{type:"applied",date:"2026-05-28",note:""}]},
+];
+
+let entries=BAKED_DATA;
+
+// Migrate: add exitReason to existing entries that don't have it
+entries.forEach(e=>{if(e.exitReason===undefined)e.exitReason='';});
+
+let activeFilter='all',showExcluded=false;
+let barChart,pieChart,weekChart;
+let activeEntryId=null;
+
+function save(){}
+
+function effectiveStatus(e){
+  if(!e.history||!e.history.length)return 'open';
+  const sorted=[...e.history].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const last=sorted[sorted.length-1];
+  if(last.type==='followup'){
+    for(let i=sorted.length-2;i>=0;i--){if(sorted[i].type!=='followup')return sorted[i].type;}
+    return 'applied';
+  }
+  return last.type;
+}
+function lastDate(e){
+  if(!e.history||!e.history.length)return '';
+  const sorted=[...e.history].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  return sorted[sorted.length-1].date;
+}
+function countInterviews(e){return(e.history||[]).filter(h=>h.type==='interview').length;}
+function countOnsites(e){return(e.history||[]).filter(h=>h.type==='onsite').length;}
+function wasFollowedUp(e){return(e.history||[]).some(h=>h.type==='followup');}
+function isoWeek(dateStr){
+  const d=new Date(dateStr);const day=d.getDay()||7;
+  d.setDate(d.getDate()+4-day);
+  const jan1=new Date(d.getFullYear(),0,1);
+  return{w:Math.ceil(((d-jan1)/86400000+1)/7),y:d.getFullYear()};
+}
+
+function toggleAddForm(){
+  const s=document.getElementById('add-form-section');
+  s.style.display=s.style.display==='none'?'block':'none';
+  if(s.style.display==='block')document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
+}
+function addEntry(){
+  const company=document.getElementById('f-company').value.trim();
+  if(!company){alert('Unternehmen erforderlich.');return;}
+  const status=document.getElementById('f-status').value;
+  const date=document.getElementById('f-date').value||new Date().toISOString().slice(0,10);
+  entries.push({
+    id:Date.now(),company,
+    role:document.getElementById('f-role').value.trim(),
+    source:document.getElementById('f-source').value.trim(),
+    location:document.getElementById('f-location').value.trim(),
+    salary:document.getElementById('f-salary').value.trim(),
+    priority:document.getElementById('f-priority').value,
+    note:document.getElementById('f-note').value.trim(),
+    exitReason:'',
+    history:[{type:status,date,note:''}]
+  });
+  save();render();toggleAddForm();
+  ['f-company','f-role','f-source','f-location','f-salary','f-note'].forEach(id=>document.getElementById(id).value='');
+}
+function deleteEntry(id){if(!confirm('Eintrag komplett löschen?'))return;entries=entries.filter(e=>e.id!==id);save();render();}
+
+let editEntryId=null;
+function openEditModal(id){
+  const e=entries.find(en=>en.id===id);if(!e)return;
+  editEntryId=id;
+  document.getElementById('edit-modal-sub').textContent=e.company;
+  document.getElementById('edit-company').value=e.company||'';
+  document.getElementById('edit-role').value=e.role||'';
+  document.getElementById('edit-source').value=e.source||'';
+  document.getElementById('edit-location').value=e.location||'';
+  document.getElementById('edit-salary').value=e.salary||'';
+  document.getElementById('edit-priority').value=e.priority||'';
+  document.getElementById('edit-note').value=e.note||'';
+  document.getElementById('edit-exitreason').value=e.exitReason||'';
+  document.getElementById('edit-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('edit-company').focus(),50);
+}
+function closeEditModal(){editEntryId=null;document.getElementById('edit-modal').classList.remove('show');}
+function saveEdit(){
+  if(editEntryId===null)return;
+  const e=entries.find(en=>en.id===editEntryId);if(!e)return;
+  const company=document.getElementById('edit-company').value.trim();
+  if(!company){alert('Unternehmen darf nicht leer sein.');return;}
+  e.company=company;
+  e.role=document.getElementById('edit-role').value.trim();
+  e.source=document.getElementById('edit-source').value.trim();
+  e.location=document.getElementById('edit-location').value.trim();
+  e.salary=document.getElementById('edit-salary').value.trim();
+  e.priority=document.getElementById('edit-priority').value;
+  e.note=document.getElementById('edit-note').value.trim();
+  e.exitReason=document.getElementById('edit-exitreason').value;
+  save();closeEditModal();render();
+}
+
+function openTimeline(id){
+  activeEntryId=id;
+  const e=entries.find(en=>en.id===id);if(!e)return;
+  document.getElementById('modal-company').textContent=e.company;
+  document.getElementById('ev-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('ev-note').value='';
+  const curr=effectiveStatus(e);
+  const defaultNext={open:'applied',applied:'interview',interview:'onsite',onsite:'angebot',angebot:'rejected',followup:'interview',nofeedback:'followup',rejected:'open'};
+  document.getElementById('ev-type').value=defaultNext[curr]||'interview';
+  renderTimeline(e);
+  document.getElementById('timeline-modal').classList.add('show');
+}
+function closeTimelineModal(){activeEntryId=null;document.getElementById('timeline-modal').classList.remove('show');render();}
+function renderTimeline(e){
+  const ul=document.getElementById('modal-timeline');
+  if(!e.history||!e.history.length){ul.innerHTML='<li style="color:var(--text3);font-size:12px;padding:8px 0">Keine Termine erfasst.</li>';return;}
+  const sorted=[...e.history].map((h,i)=>({...h,idx:i})).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const chron=[...e.history].map((h,i)=>({...h,idx:i})).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  let intC=0;const intMap={};chron.forEach(h=>{if(h.type==='interview'){intC++;intMap[h.idx]=intC;}});
+  let onsC=0;const onsMap={};chron.forEach(h=>{if(h.type==='onsite'){onsC++;onsMap[h.idx]=onsC;}});
+  ul.innerHTML=sorted.map(h=>{
+    const lbl=SC[h.type]?.label||h.type;
+    const dateStr=h.date?new Date(h.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}):'--';
+    let typeLabel=lbl;
+    if(h.type==='interview'&&intMap[h.idx])typeLabel=intMap[h.idx]+'. Interview';
+    if(h.type==='onsite'&&onsMap[h.idx])typeLabel=onsMap[h.idx]+'. Vor-Ort-Termin';
+    return `<li class="timeline-item t-${h.type}">
+      <span class="timeline-date">${dateStr}</span>
+      <span class="timeline-type">${typeLabel}</span>
+      <button class="timeline-delete" onclick="deleteEvent(${h.idx})" title="löschen">&#215;</button>
+      ${h.note?`<span class="timeline-note">${h.note}</span>`:''}
+    </li>`;
+  }).join('');
+}
+function addEvent(){
+  if(activeEntryId===null)return;
+  const type=document.getElementById('ev-type').value;
+  const date=document.getElementById('ev-date').value;
+  const note=document.getElementById('ev-note').value.trim();
+  if(!date){alert('Datum ist Pflicht.');return;}
+  const e=entries.find(en=>en.id===activeEntryId);if(!e)return;
+  e.history=e.history||[];
+  e.history.push({type,date,note});
+  save();renderTimeline(e);document.getElementById('ev-note').value='';render();
+}
+function deleteEvent(idx){
+  if(activeEntryId===null)return;
+  if(!confirm('Termin löschen?'))return;
+  const e=entries.find(en=>en.id===activeEntryId);if(!e||!e.history)return;
+  e.history.splice(idx,1);
+  if(!e.history.length)e.history=[{type:'open',date:new Date().toISOString().slice(0,10),note:'zurückgesetzt'}];
+  save();renderTimeline(e);render();
+}
+
+function toggleExcluded(){showExcluded=!showExcluded;render();}
+function setFilter(k){activeFilter=k;render();}
+function activeEntries(){return entries.filter(e=>effectiveStatus(e)!=='excluded');}
+function countByStatus(){
+  const c={open:0,applied:0,interview:0,onsite:0,angebot:0,nofeedback:0,rejected:0,withdrawn:0,excluded:0};
+  entries.forEach(e=>{const s=effectiveStatus(e);if(c[s]!==undefined)c[s]++;});
+  return c;
+}
+function totalInterviews(){return entries.filter(e=>effectiveStatus(e)!=='excluded').reduce((s,e)=>s+countInterviews(e),0);}
+function totalOnsites(){return entries.filter(e=>effectiveStatus(e)!=='excluded').reduce((s,e)=>s+countOnsites(e),0);}
+
+/* ====== Performance KPIs ====== */
+function calcInterviewQuote(){
+  const active=activeEntries();
+  const bew=active.filter(e=>(e.history||[]).some(h=>['applied','interview','onsite','angebot','nofeedback','rejected'].includes(h.type))).length;
+  const int=active.filter(e=>(e.history||[]).some(h=>['interview','onsite','angebot'].includes(h.type))).length;
+  return{pct:bew>0?Math.round(int/bew*100):0,num:int,base:bew};
+}
+function calcVorOrtQuote(){
+  const active=activeEntries();
+  const int=active.filter(e=>(e.history||[]).some(h=>h.type==='interview')).length;
+  const vo=active.filter(e=>(e.history||[]).some(h=>['onsite','angebot'].includes(h.type))).length;
+  return{pct:int>0?Math.round(vo/int*100):0,num:vo,base:int};
+}
+function calcAngebotsQuote(){
+  const active=activeEntries();
+  const vo=active.filter(e=>(e.history||[]).some(h=>['onsite','angebot'].includes(h.type))).length;
+  const ang=active.filter(e=>(e.history||[]).some(h=>h.type==='angebot')).length;
+  return{pct:vo>0?Math.round(ang/vo*100):0,num:ang,base:vo};
+}
+function calcReaktionszeit(){
+  const responseTypes=['interview','onsite','angebot','nofeedback','rejected'];
+  const times=[];
+  activeEntries().forEach(e=>{
+    const hist=(e.history||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    const applyEv=hist.find(h=>h.type==='applied');
+    if(!applyEv||!applyEv.date)return;
+    const respEv=hist.find(h=>h.date>applyEv.date&&responseTypes.includes(h.type));
+    if(!respEv||!respEv.date)return;
+    const diff=Math.round((new Date(respEv.date)-new Date(applyEv.date))/(1000*60*60*24));
+    if(diff>=0)times.push(diff);
+  });
+  if(!times.length)return{avg:0,n:0};
+  return{avg:Math.round(times.reduce((a,b)=>a+b,0)/times.length),n:times.length};
+}
+
+/* ====== Quellen-Ranking — dynamisch je eindeutiger Quelle ====== */
+function calcQuellenRanking(){
+  const sourceMap={};
+  entries.forEach(e=>{
+    const src=(e.source||'').trim();
+    const key=src.toLowerCase();
+    if(!sourceMap[key])sourceMap[key]={label:src||'(ohne Quelle)',pool:[]};
+    sourceMap[key].pool.push(e);
+  });
+  return Object.values(sourceMap).map(({label,pool})=>{
+    const displayLabel=label.toLowerCase()==='firmen hp'?'Direktbewerbung':label;
+    const bew=pool.filter(e=>(e.history||[]).some(h=>['applied','interview','onsite','angebot','nofeedback','rejected'].includes(h.type))).length;
+    const open=pool.filter(e=>effectiveStatus(e)==='open').length;
+    const int=pool.filter(e=>(e.history||[]).some(h=>['interview','onsite','angebot'].includes(h.type))).length;
+    const vo=pool.filter(e=>(e.history||[]).some(h=>['onsite','angebot'].includes(h.type))).length;
+    const ang=pool.filter(e=>(e.history||[]).some(h=>h.type==='angebot')).length;
+    const rej=pool.filter(e=>effectiveStatus(e)==='rejected').length;
+    return{label:displayLabel,open,bew,int,vo,ang,rej,
+      iRate:bew>0?Math.round(int/bew*100):0,
+      vRate:int>0?Math.round(vo/int*100):0};
+  }).filter(r=>r.bew>0||r.open>0)
+    .sort((a,b)=>(b.bew+b.open)-(a.bew+a.open));
+}
+function calcExitReasons(){
+  const reasons={};
+  entries.filter(e=>e.exitReason).forEach(e=>{reasons[e.exitReason]=(reasons[e.exitReason]||0)+1;});
+  return Object.entries(reasons).sort((a,b)=>b[1]-a[1]);
+}
+
+/* ====== Render ====== */
+function render(){
+  const c=countByStatus();const active=activeEntries();const total=active.length;
+  const ti=totalInterviews();const to=totalOnsites();
+  const nfFollowed=active.filter(e=>wasFollowedUp(e)).length;
+  document.getElementById('kpi-total').textContent=total;
+  document.getElementById('kpi-open').textContent=c.open;
+  document.getElementById('kpi-applied').textContent=c.applied;
+  document.getElementById('kpi-interview').textContent=c.interview;
+  document.getElementById('kpi-int-count').textContent=ti>0?ti+' Gespr\u00e4ch'+(ti!==1?'e':''):'';
+  document.getElementById('kpi-onsite').textContent=c.onsite;
+  document.getElementById('kpi-onsite-count').textContent=to>0?to+' Termin'+(to!==1?'e':''):'';
+  document.getElementById('kpi-angebot').textContent=c.angebot;
+  document.getElementById('kpi-nofeedback').textContent=c.nofeedback;
+  document.getElementById('kpi-nf-followup').textContent=nfFollowed>0?nfFollowed+'x nachgefasst':'';
+  document.getElementById('kpi-rejected').textContent=c.rejected;
+  document.getElementById('entry-count').textContent=total+' aktiv \u00b7 '+c.excluded+' ausgeschlossen';
+  renderPerfKPIs();
+  renderBarChart(c);renderPieChart(c,total);renderWeekChart();renderFunnel(c);
+  renderQuellenAnalyse();renderTable();renderFilters();
+}
+
+function renderPerfKPIs(){
+  const iq=calcInterviewQuote();
+  const voq=calcVorOrtQuote();
+  const aq=calcAngebotsQuote();
+  const rt=calcReaktionszeit();
+  const iqCls=iq.base===0?'neutral':iq.pct>=20?'good':iq.pct>=10?'warn':'poor';
+  document.getElementById('perf-iq-card').className='perf-kpi-card '+iqCls;
+  document.getElementById('perf-iq-val').textContent=iq.base>0?iq.pct+'%':'\u2014';
+  document.getElementById('perf-iq-sub').textContent=iq.base>0?iq.num+' / '+iq.base+' Bewerbungen':'Keine Daten';
+  const voqCls=voq.base===0?'neutral':voq.pct>=40?'good':voq.pct>=20?'warn':'poor';
+  document.getElementById('perf-voq-card').className='perf-kpi-card '+voqCls;
+  document.getElementById('perf-voq-val').textContent=voq.base>0?voq.pct+'%':'\u2014';
+  document.getElementById('perf-voq-sub').textContent=voq.base>0?voq.num+' / '+voq.base+' Interviews':'Keine Daten';
+  const aqCls=aq.base===0?'neutral':aq.num>0?'good':'warn';
+  document.getElementById('perf-aq-card').className='perf-kpi-card '+aqCls;
+  document.getElementById('perf-aq-val').textContent=aq.base>0?aq.pct+'%':'\u2014';
+  document.getElementById('perf-aq-sub').textContent=aq.base>0?aq.num+' Angebot'+(aq.num!==1?'e':'')+' / '+aq.base+' Vor-Ort':'Keine Daten';
+  document.getElementById('perf-rt-card').className='perf-kpi-card neutral';
+  document.getElementById('perf-rt-val').textContent=rt.n>0?rt.avg+'d':'\u2014';
+  document.getElementById('perf-rt-sub').textContent=rt.n>0?'\u00d8 \u00fcber '+rt.n+' Prozesse':'Noch keine Daten';
+}
+
+function renderQuellenAnalyse(){
+  const data=calcQuellenRanking();
+  const qEl=document.getElementById('quellen-table-body');
+  if(!data.length){
+    qEl.innerHTML='<tr><td colspan="8" class="empty-state">Noch keine Daten.</td></tr>';
+  } else {
+    qEl.innerHTML=data.map(r=>{
+      const iqC=r.iRate>=20?'var(--green)':r.iRate>=10?'var(--amber)':'var(--red)';
+      const vqC=r.vRate>=40?'var(--green)':r.vRate>=20?'var(--amber)':'var(--red)';
+      const iqShow=r.bew>0?(r.iRate===0?'0%':'<span style="color:'+iqC+';font-weight:500">'+r.iRate+'%</span>'):'&#8212;';
+      const vqShow=r.int>0?(r.vRate===0?'0%':'<span style="color:'+vqC+';font-weight:500">'+r.vRate+'%</span>'):'&#8212;';
+      const angShow=r.ang>0?'<span style="color:var(--blue);font-weight:600">'+r.ang+'</span>':'&#8212;';
+      const openCell=r.open>0?'<span style="color:var(--teal);font-weight:500">'+r.open+'</span>':'<span style="color:var(--text3)">&#8212;</span>';
+      return '<tr><td style="font-weight:500">'+r.label+'</td><td style="font-family:var(--mono);text-align:center">'+openCell+'</td><td style="font-family:var(--mono);text-align:center">'+r.bew+'</td><td style="font-family:var(--mono);text-align:center">'+r.int+'</td><td style="font-family:var(--mono);text-align:center">'+iqShow+'</td><td style="font-family:var(--mono);text-align:center">'+r.vo+'</td><td style="font-family:var(--mono);text-align:center">'+vqShow+'</td><td style="font-family:var(--mono);text-align:center">'+angShow+'</td><td style="font-family:var(--mono);text-align:center;color:var(--red)">'+r.rej+'</td></tr>';
+    }).join('');
+  }
+  const reasons=calcExitReasons();
+  const rEl=document.getElementById('exit-reasons-body');
+  if(!reasons.length){
+    rEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:8px 0;font-family:var(--mono)">Noch keine Gr\u00fcnde erfasst.<br>Im Bearbeiten-Dialog setzen.</div>';
+  } else {
+    const maxVal=Math.max(...reasons.map(([,v])=>v));
+    rEl.innerHTML=reasons.map(([reason,count])=>{
+      const pct=Math.round(count/maxVal*100);
+      return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:148px;font-size:11px;color:var(--text2);flex-shrink:0;font-family:var(--mono)">'+reason+'</div><div style="flex:1;background:rgba(0,0,0,0.04);border-radius:3px;height:14px;overflow:hidden"><div style="width:'+pct+'%;background:var(--red);opacity:0.35;height:100%;border-radius:3px;border-right:2px solid var(--red)"></div></div><div style="width:26px;font-family:var(--mono);font-size:11px;text-align:right;color:var(--text3)">'+count+'x</div></div>';
+    }).join('');
+  }
+}
+
+function renderBarChart(c){
+  const keys=['open','applied','interview','onsite','angebot','nofeedback','rejected'];
+  if(barChart)barChart.destroy();
+  const ctx=document.getElementById('barChart').getContext('2d');
+  barChart=new Chart(ctx,{type:'bar',data:{labels:keys.map(k=>SC[k].label),datasets:[{data:keys.map(k=>c[k]),backgroundColor:keys.map(k=>SC[k].color+'2a'),borderColor:keys.map(k=>SC[k].color),borderWidth:1.5,borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#ffffff',titleColor:'#1a1d20',bodyColor:'#495057',borderColor:'rgba(0,0,0,0.15)',borderWidth:1}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#868e96',font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#868e96',font:{size:10,family:'IBM Plex Mono'},stepSize:1},beginAtZero:true}}}});
+}
+function renderPieChart(c,total){
+  const keys=['open','applied','interview','onsite','angebot','nofeedback','rejected'].filter(k=>c[k]>0);
+  if(pieChart)pieChart.destroy();
+  const legend=document.getElementById('pie-legend');
+  if(total===0){legend.innerHTML='<span style="font-size:11px;color:var(--text3)">Keine Daten</span>';return;}
+  const colors=keys.map(k=>SC[k].color);
+  const ctx=document.getElementById('pieChart').getContext('2d');
+  pieChart=new Chart(ctx,{type:'doughnut',data:{labels:keys.map(k=>SC[k].label),datasets:[{data:keys.map(k=>c[k]),backgroundColor:colors.map(c=>c+'55'),borderColor:colors,borderWidth:2,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#ffffff',titleColor:'#1a1d20',bodyColor:'#495057',borderColor:'rgba(0,0,0,0.15)',borderWidth:1,callbacks:{label:(ctx)=>{const pct=Math.round(ctx.parsed/total*100);return ' '+ctx.parsed+' ('+pct+'%)';  }}}}}});
+  legend.innerHTML=keys.map((k,i)=>{const pct=Math.round(c[k]/total*100);return '<div class="legend-item"><div class="legend-dot" style="background:'+colors[i]+'"></div><span>'+SC[k].label+' '+pct+'%</span></div>';}).join('');
+}
+function renderWeekChart(){
+  let pool=activeEntries();
+  if(activeFilter!=='all')pool=entries.filter(e=>effectiveStatus(e)===activeFilter);
+  const weeks={};
+  pool.forEach(e=>{const d=lastDate(e);if(!d)return;const{w,y}=isoWeek(d);const key=y+'-W'+String(w).padStart(2,'0');weeks[key]=(weeks[key]||0)+1;});
+  const sorted=Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0])).slice(-12);
+  const info=document.getElementById('week-filter-info');
+  if(activeFilter==='all'){info.textContent='alle aktiven';info.style.color='var(--text3)';}
+  else{info.textContent='Filter: '+SC[activeFilter].label;info.style.color=SC[activeFilter].color;}
+  if(weekChart)weekChart.destroy();
+  if(!sorted.length)return;
+  const color=activeFilter==='all'?'#4f6ef7':SC[activeFilter].color;
+  const ctx=document.getElementById('weekChart').getContext('2d');
+  weekChart=new Chart(ctx,{type:'line',data:{labels:sorted.map(([k])=>k.replace(/\d{4}-/,'')),datasets:[{data:sorted.map(([,v])=>v),borderColor:color,backgroundColor:color+'18',borderWidth:2,fill:true,tension:0.3,pointBackgroundColor:color,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#ffffff',titleColor:'#1a1d20',bodyColor:'#495057',borderColor:'rgba(0,0,0,0.15)',borderWidth:1}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#868e96',font:{size:10,family:'IBM Plex Mono'}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#868e96',font:{size:10,family:'IBM Plex Mono'},stepSize:1},beginAtZero:true}}}});
+}
+function renderFunnel(c){
+  const active=activeEntries();
+  const everReached={
+    applied:active.filter(e=>(e.history||[]).some(h=>['applied','interview','onsite','angebot','nofeedback','rejected'].includes(h.type))).length,
+    interview:active.filter(e=>(e.history||[]).some(h=>['interview','onsite','angebot'].includes(h.type))).length,
+    onsite:active.filter(e=>(e.history||[]).some(h=>['onsite','angebot'].includes(h.type))).length,
+    angebot:active.filter(e=>(e.history||[]).some(h=>h.type==='angebot')).length,
+  };
+  const stages=[
+    {key:'applied',label:'Beworben',val:everReached.applied},
+    {key:'interview',label:'Interview',val:everReached.interview},
+    {key:'onsite',label:'Vor-Ort',val:everReached.onsite},
+    {key:'angebot',label:'Angebot',val:everReached.angebot},
+    {key:'rejected',label:'Absage',val:c.rejected}
+  ];
+  const max=Math.max(...stages.map(s=>s.val),1);
+  const el=document.getElementById('funnel-container');
+  const ti=totalInterviews();const to=totalOnsites();const base=everReached.applied;
+  let html='';
+  if(c.open>0)html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;padding-bottom:8px;border-bottom:1px dashed var(--border)"><div style="width:80px;font-size:10px;color:var(--text3);text-align:right;flex-shrink:0">Offen</div><div style="flex:1;font-size:11px;color:#5a9e60;font-family:var(--mono)">'+c.open+' noch nicht beworben</div><div style="width:36px"></div></div>';
+  html+=stages.map(s=>{
+    const pct=Math.round(s.val/max*100);
+    const convPct=base>0?Math.round(s.val/base*100)+'%':'0%';
+    const col=SC[s.key].color;
+    let extra='';
+    if(s.key==='interview'&&ti>0)extra=' <span style="font-size:9px;opacity:0.6">('+ti+' Gespr\u00e4che)</span>';
+    if(s.key==='onsite'&&to>0)extra=' <span style="font-size:9px;opacity:0.6">('+to+' Termine)</span>';
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px"><div style="width:80px;font-size:10px;color:var(--text3);text-align:right;flex-shrink:0">'+s.label+extra+'</div><div style="flex:1;background:rgba(0,0,0,0.04);border-radius:4px;height:20px;overflow:hidden"><div style="width:'+pct+'%;background:'+col+'2a;border-right:2px solid '+col+';height:100%;border-radius:4px;display:flex;align-items:center">'+(pct>15?'<span style="font-size:10px;font-family:monospace;color:'+col+';padding:0 7px">'+s.val+'</span>':'')+'</div></div><div style="width:36px;font-family:monospace;font-size:10px;color:var(--text3);flex-shrink:0">'+convPct+'</div></div>';
+  }).join('');
+  el.innerHTML=html;
+  document.getElementById('conv-rate').textContent=base>0?'Basis: '+base+' Beworben \u00b7 Stille: '+c.nofeedback+'/'+base+' ('+Math.round(c.nofeedback/base*100)+'%)':'';
+}
+function renderFilters(){
+  const row=document.getElementById('filter-row');
+  const btns=[['all','Alle'],...Object.entries(SC).filter(([k])=>k!=='excluded'&&k!=='followup'&&k!=='withdrawn'||k==='withdrawn').map(([k,v])=>[k,v.label])];
+  row.innerHTML=btns.map(([k,l])=>'<button class="filter-btn '+(activeFilter===k?'active':'')+'" onclick="setFilter(\''+k+'\')">'+l+'</button>').join('')+'<button class="excl-toggle" onclick="toggleExcluded()">'+(showExcluded?'Ausschl\u00fcsse verbergen':'Ausschl\u00fcsse anzeigen')+'</button>';
+}
+function renderTable(){
+  const tbody=document.getElementById('entry-table-body');
+  let pool=entries.map(e=>({e,status:effectiveStatus(e)}));
+  if(activeFilter==='all'){pool=pool.filter(p=>p.status!=='excluded'||showExcluded);}
+  else{pool=pool.filter(p=>p.status===activeFilter);}
+  const sorted=pool.sort((a,b)=>(lastDate(b.e)||'').localeCompare(lastDate(a.e)||''));
+  if(!sorted.length){tbody.innerHTML='<tr><td colspan="12"><div class="empty-state">Keine Eintr\u00e4ge.</div></td></tr>';return;}
+  tbody.innerHTML=sorted.map(({e,status})=>{
+    const sc=SC[status]||SC.open;
+    const ld=lastDate(e);
+    const dateStr=ld?new Date(ld).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}):'--';
+    const prioColor=e.priority==='hoch'?'var(--teal)':e.priority==='mittel'?'var(--amber)':'var(--text3)';
+    const intC=countInterviews(e);const onsC=countOnsites(e);
+    const terminBadges=[];
+    if(intC>0)terminBadges.push('<span style="font-family:monospace;font-size:10px;color:var(--amber)">'+intC+'I</span>');
+    if(onsC>0)terminBadges.push('<span style="font-family:monospace;font-size:10px;color:var(--green)">'+onsC+'V</span>');
+    const terminCell=terminBadges.length?terminBadges.join(' '):'';
+    const nfBadge=wasFollowedUp(e)?'<span class="badge-nf">NF</span>':'';
+    const eventCount=e.history?e.history.length:0;
+    const erLabel=e.exitReason||'';
+    const exitBadge=(erLabel&&(status==='rejected'||status==='excluded'))?'<br><span style="font-family:var(--mono);font-size:9px;color:var(--text3)">'+erLabel+'</span>':'';
+    return '<tr class="'+(status==='excluded'?'row-excluded':'')+'"><td style="font-family:monospace;font-size:11px;font-weight:500;color:var(--text2)">'+dateStr+'</td><td class="company-name"><span style="cursor:pointer;border-bottom:1px dotted var(--text3)" onclick="openEditModal('+e.id+')">'+e.company+'</span></td><td style="font-size:12px">'+(e.role||'--')+'</td><td style="color:var(--text2);font-size:11px">'+(e.source||'--')+'</td><td style="color:var(--text2);font-size:11px">'+(e.location||'--')+'</td><td style="font-family:monospace;font-size:11px;font-weight:500;color:var(--text2)">'+(e.salary||'--')+'</td><td style="font-size:11px;color:'+prioColor+';font-family:monospace">'+(e.priority||'--')+'</td><td><span style="font-family:var(--mono);font-size:11px;color:'+sc.color+'">'+sc.label+'</span>'+exitBadge+'</td><td style="text-align:center;white-space:nowrap"><button class="timeline-btn" onclick="openTimeline('+e.id+')">'+(terminCell||'+')+(eventCount>0?' <span style="opacity:0.5;margin-left:3px">&#8250;</span>':'')+'</button></td><td style="text-align:center">'+nfBadge+'</td><td style="color:var(--text2);font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(e.note||'')+'">'+(e.note||'--')+'</td><td><button class="delete-btn" onclick="deleteEntry('+e.id+')">&#215;</button></td></tr>';
+  }).join('');
+}
+
+async function exportPPTX(){
+  const btn=document.getElementById('ppt-btn');
+  const orig=btn.textContent;
+  btn.textContent='Bitte warten…';btn.disabled=true;
+  try{
+    const pres=new PptxGenJS();
+    pres.layout='LAYOUT_16x9';pres.title='Bewerbungsaktivitäten 2026';pres.author='Thorsten Blechmann';
+    const P={dark:'1E2D52',accent:'3955D6',green:'0A6B3D',amber:'9A6300',red:'B32525',teal:'0A7D6B',orange:'B54A14',blue:'2A7FFF',openG:'5A9E60',txt:'1E293B',muted:'64748B',border:'D1D9E6',surf:'F4F6FB',white:'FFFFFF'};
+    const sCol=s=>({'Absage':'B32525','Eigenabsage':'7C5CBF','Interview':'9A6300','Beworben':'0A7D6B','Vor-Ort-Termin':'0A6B3D','Angebot':'2A7FFF','Offen':'5A9E60','Kein Feedback':'B54A14','Nicht bewerben':'3a3a4a','Nachgefasst':'B54A14'}[s]||'64748B');
+    const today=new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+    function addHdr(sl,left,right){
+      sl.addShape(pres.shapes.RECTANGLE,{x:0,y:0,w:10,h:0.46,fill:{color:P.dark},line:{color:P.dark}});
+      sl.addText(left, {x:0.28,y:0,w:7.2,h:0.46,fontSize:13,bold:true,color:P.white,valign:'middle',margin:0});
+      sl.addText(right,{x:7.5, y:0,w:2.2,h:0.46,fontSize:8, color:'8AABC8',align:'right',valign:'middle',margin:0});
+    }
+    /* ── live data ── */
+    const c=countByStatus(),act=activeEntries(),tot=act.length;
+    const iq=calcInterviewQuote(),voq=calcVorOrtQuote(),aq=calcAngebotsQuote(),rt=calcReaktionszeit();
+    const qData=calcQuellenRanking(),exData=calcExitReasons();
+    const bew_ev=act.filter(e=>(e.history||[]).some(h=>['applied','interview','onsite','angebot','nofeedback','rejected'].includes(h.type))).length;
+    const int_ev=act.filter(e=>(e.history||[]).some(h=>['interview','onsite','angebot'].includes(h.type))).length;
+    const vo_ev =act.filter(e=>(e.history||[]).some(h=>['onsite','angebot'].includes(h.type))).length;
+    const ang_ev=act.filter(e=>(e.history||[]).some(h=>h.type==='angebot')).length;
+    const fMax=Math.max(bew_ev,1);
+    const funnel=[
+      {lbl:'Beworben', val:bew_ev,pct:'100%',             col:P.teal},
+      {lbl:'Interview',val:int_ev,pct:Math.round(int_ev/fMax*100)+'%',col:P.amber},
+      {lbl:'Vor-Ort',  val:vo_ev, pct:Math.round(vo_ev/fMax*100)+'%', col:P.green},
+      {lbl:'Angebot',  val:ang_ev,pct:Math.round(ang_ev/fMax*100)+'%',col:P.blue},
+      {lbl:'Absagen',  val:c.rejected,pct:Math.round(c.rejected/fMax*100)+'%',col:P.red},
+    ];
+    const weekMap={};
+    entries.forEach(e=>(e.history||[]).forEach(h=>{
+      if(h.type==='applied'&&h.date){const{w,y}=isoWeek(h.date);const k=y+'-W'+String(w).padStart(2,'0');weekMap[k]=(weekMap[k]||0)+1;}
+    }));
+    const sw=Object.entries(weekMap).sort((a,b)=>a[0].localeCompare(b[0])).slice(-10);
+    const wLbl=sw.map(([k])=>k.replace(/\d{4}-/,''));const wVal=sw.map(([,v])=>v);
+    const tblE=entries.filter(e=>effectiveStatus(e)!=='excluded')
+      .sort((a,b)=>(lastDate(b)||'').localeCompare(lastDate(a)||''))
+      .map(e=>{const ld=lastDate(e);return[ld?new Date(ld).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—',e.company||'',e.role||'',e.source||'—',SC[effectiveStatus(e)]?.label||'',([...e.history||[]].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(h=>{const d=h.date?new Date(h.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}):'--';return d+' '+({applied:'Bew.',interview:'Int.',onsite:'V-O',angebot:'Ang.',followup:'NF',nofeedback:'k.FB',rejected:'Abs.',withdrawn:'Eig.',open:'Offen',excluded:'n.bew.'}[h.type]||h.type);}).join(' → '))||'—'];});
+    /* ── Slide 1 ── */
+    const s1=pres.addSlide();s1.background={color:P.white};
+    addHdr(s1,'Bewerbungsaktivitäten 2026  ·  Dipl.-Ing. Thorsten Blechmann',`Stand: ${today}`);
+    const kpis2=[{lbl:'Gesamt',val:tot,sub:'aktiv',col:P.accent},{lbl:'Offen',val:c.open,sub:'Pipeline',col:P.openG},{lbl:'Beworben',val:c.applied,sub:'eingereicht',col:P.teal},{lbl:'Interview',val:c.interview,sub:'aktiv',col:P.amber},{lbl:'Vor-Ort',val:c.onsite,sub:'Termine',col:P.green},{lbl:'Angebot',val:c.angebot,sub:'erhalten',col:P.blue},{lbl:'K.Feedback',val:c.nofeedback,sub:'offen',col:P.orange},{lbl:'Absage',val:c.rejected,sub:'abgelehnt',col:P.red}];
+    const CW=1.125,CH=0.76,CY=0.54,CG=0.035;
+    kpis2.forEach((k,i)=>{const x=0.28+i*(CW+CG);
+      s1.addShape(pres.shapes.RECTANGLE,{x,y:CY,w:CW,h:CH,fill:{color:P.surf},line:{color:P.border,pt:0.5}});
+      s1.addShape(pres.shapes.RECTANGLE,{x,y:CY,w:CW,h:0.04,fill:{color:k.col},line:{color:k.col}});
+      s1.addText(String(k.val),{x,y:CY+0.05,w:CW,h:0.36,fontSize:24,bold:true,color:k.col,align:'center',valign:'middle',fontFace:'Calibri'});
+      s1.addText(k.lbl.toUpperCase(),{x,y:CY+0.4,w:CW,h:0.17,fontSize:6.5,bold:true,color:P.muted,align:'center'});
+      s1.addText(k.sub,{x,y:CY+0.56,w:CW,h:0.16,fontSize:7,color:P.muted,align:'center'});});
+    const pKPIs=[{lbl:'KPI 1 · Interviewquote',val:iq.base>0?iq.pct+'%':'—',sub:`${iq.num}/${iq.base} Bew. · Soll 20%`,col:iq.base===0?P.accent:iq.pct>=20?P.green:iq.pct>=10?P.amber:P.red},{lbl:'KPI 2 · Vor-Ort-Quote',val:voq.base>0?voq.pct+'%':'—',sub:`${voq.num}/${voq.base} Int. · Soll 40%`,col:voq.base===0?P.accent:voq.pct>=40?P.green:voq.pct>=20?P.amber:P.red},{lbl:'KPI 3 · Angebotsquote',val:aq.base>0?aq.pct+'%':'—',sub:`${aq.num}/${aq.base} Vor-Ort`,col:aq.base===0?P.accent:aq.num>0?P.green:P.red},{lbl:'KPI 4 · Ø Reaktionszeit',val:rt.n>0?rt.avg+'d':'—',sub:`Ø über ${rt.n} Prozesse`,col:P.accent}];
+    const PW=2.32,PY=1.38,PH=0.62;
+    pKPIs.forEach((p,i)=>{const x=0.28+i*(PW+0.04);
+      s1.addShape(pres.shapes.RECTANGLE,{x,y:PY,w:PW,h:PH,fill:{color:P.surf},line:{color:P.border,pt:0.5}});
+      s1.addShape(pres.shapes.RECTANGLE,{x,y:PY,w:PW,h:0.04,fill:{color:p.col},line:{color:p.col}});
+      s1.addText(p.val,{x,y:PY+0.05,w:PW,h:0.3,fontSize:20,bold:true,color:p.col,align:'center',valign:'middle',fontFace:'Calibri'});
+      s1.addText(p.lbl.toUpperCase(),{x,y:PY+0.33,w:PW,h:0.14,fontSize:6.5,bold:true,color:P.muted,align:'center'});
+      s1.addText(p.sub,{x,y:PY+0.46,w:PW,h:0.13,fontSize:7,color:P.muted,align:'center'});});
+    s1.addChart(pres.charts.BAR,[{name:'Status',labels:['Offen','Beworben','Interview','Vor-Ort','Angebot','K.Feedback','Absage'],values:[c.open,c.applied,c.interview,c.onsite,c.angebot,c.nofeedback,c.rejected]}],{x:0.28,y:2.1,w:5.7,h:3.3,barDir:'col',chartColors:[P.openG,P.teal,P.amber,P.green,P.blue,P.orange,P.red],chartArea:{fill:{color:P.white}},plotArea:{fill:{color:P.white}},catAxisLabelColor:P.muted,catAxisLabelFontSize:9,valAxisLabelColor:P.muted,valAxisLabelFontSize:9,valGridLine:{color:'E8ECF4',size:0.5},catGridLine:{style:'none'},showValue:true,dataLabelFontSize:9,dataLabelColor:P.txt,showLegend:false,showTitle:true,title:'Aktuelle Statusverteilung',titleFontSize:10,titleColor:P.muted});
+    const pvBase=[c.open,c.applied,c.interview,c.onsite,c.nofeedback,c.rejected];
+    const pvLbls=['Offen','Beworben','Interview','Vor-Ort','K.Feedback','Absage'];
+    const pvCols=[P.openG,P.teal,P.amber,P.green,P.orange,P.red];
+    const pvF=pvBase.map((v,i)=>({v,l:pvLbls[i],c:pvCols[i]})).filter(x=>x.v>0);
+    if(pvF.length>0) s1.addChart(pres.charts.PIE,[{name:'Anteil',labels:pvF.map(x=>x.l),values:pvF.map(x=>x.v)}],{x:6.15,y:2.1,w:3.57,h:3.3,chartColors:pvF.map(x=>x.c),chartArea:{fill:{color:P.white}},dataLabelFontSize:9,dataLabelColor:P.white,showPercent:true,legendPos:'b',showLegend:true,legendFontSize:8,legendColor:P.muted,showTitle:true,title:'Verteilung aktiver Prozesse (%)',titleFontSize:10,titleColor:P.muted});
+    /* ── Slide 2 ── */
+    const s2=pres.addSlide();s2.background={color:P.white};
+    addHdr(s2,'Konversions-Funnel  ·  Wochenverlauf  ·  Quellenanalyse',`Stand: ${today}`);
+    s2.addText('KONVERSIONS-FUNNEL',{x:0.28,y:0.52,w:4.3,h:0.2,fontSize:8.5,bold:true,color:P.muted});
+    const fBX=1.32,fBW=2.7,fY0=0.78,fRH=0.4;
+    funnel.forEach((f,i)=>{const y=fY0+i*fRH,bw=f.val>0?(f.val/fMax)*fBW:0;
+      s2.addText(f.lbl,{x:0.28,y:y+0.05,w:1.0,h:0.28,fontSize:8.5,color:P.muted,align:'right',valign:'middle',margin:0});
+      s2.addShape(pres.shapes.RECTANGLE,{x:fBX,y:y+0.06,w:fBW,h:0.26,fill:{color:'EEF1F7'},line:{color:P.border,pt:0.3}});
+      if(bw>0.05) s2.addShape(pres.shapes.RECTANGLE,{x:fBX,y:y+0.06,w:bw,h:0.26,fill:{color:f.col,transparency:25},line:{color:f.col,pt:0.5}});
+      if(bw>0.35) s2.addText(String(f.val),{x:fBX+0.05,y:y+0.06,w:0.4,h:0.26,fontSize:9,bold:true,color:f.col,valign:'middle',margin:0});
+      s2.addText(f.pct,{x:fBX+fBW+0.07,y:y+0.06,w:0.38,h:0.26,fontSize:8,color:P.muted,valign:'middle',margin:0});});
+    s2.addText('WOCHENVERLAUF — NEUE BEWERBUNGEN (ISO-KW)',{x:0.28,y:2.84,w:4.3,h:0.2,fontSize:8.5,bold:true,color:P.muted});
+    if(wLbl.length>0) s2.addChart(pres.charts.LINE,[{name:'Aktivitäten',labels:wLbl,values:wVal}],{x:0.28,y:3.06,w:4.3,h:2.35,chartColors:[P.accent],chartArea:{fill:{color:P.white}},plotArea:{fill:{color:P.white}},catAxisLabelColor:P.muted,catAxisLabelFontSize:8,valAxisLabelColor:P.muted,valAxisLabelFontSize:8,valGridLine:{color:'E8ECF4',size:0.5},catGridLine:{style:'none'},lineSize:2,lineSmooth:true,showLegend:false});
+    const TX=4.75;
+    s2.addText('QUELLEN-ANALYSE',{x:TX,y:0.52,w:5.0,h:0.2,fontSize:8.5,bold:true,color:P.muted});
+    const qHdrs=['Quelle','Off.','Bew.','Int.','I-Q','V-O','V-Q','Ang.','Abs.'],qCW=[1.42,0.34,0.34,0.32,0.48,0.32,0.44,0.34,0.34];
+    const qHR=qHdrs.map((h,ci)=>({text:h,options:{bold:true,fontSize:8,color:P.white,fill:{color:P.dark},align:ci===0?'left':'center',valign:'middle'}}));
+    const qRows2=qData.map(r=>[
+      {text:r.label,options:{fontSize:8,color:P.txt,valign:'middle'}},
+      {text:String(r.open),options:{fontSize:8,color:P.muted,align:'center',valign:'middle'}},
+      {text:String(r.bew),options:{fontSize:8,color:P.muted,align:'center',valign:'middle'}},
+      {text:String(r.int),options:{fontSize:8,color:P.muted,align:'center',valign:'middle'}},
+      {text:r.bew>0?r.iRate+'%':'—',options:{fontSize:8,bold:r.bew>0,color:r.bew>0?(r.iRate>=20?P.green:r.iRate>=10?P.amber:P.red):P.muted,align:'center',valign:'middle'}},
+      {text:String(r.vo),options:{fontSize:8,color:P.muted,align:'center',valign:'middle'}},
+      {text:r.int>0?r.vRate+'%':'—',options:{fontSize:8,bold:r.int>0,color:r.int>0?(r.vRate>=40?P.green:r.vRate>=20?P.amber:P.red):P.muted,align:'center',valign:'middle'}},
+      {text:r.ang>0?String(r.ang):'—',options:{fontSize:8,bold:r.ang>0,color:r.ang>0?P.blue:P.muted,align:'center',valign:'middle'}},
+      {text:String(r.rej),options:{fontSize:8,color:r.rej>0?P.red:P.muted,align:'center',valign:'middle'}},
+    ]);
+    const qLim=qRows2.slice(0,8);const qEndY=0.75+(qLim.length+1)*0.26;
+    if(qLim.length>0) s2.addTable([qHR,...qLim],{x:TX,y:0.75,w:4.96,rowH:0.26,colW:qCW,border:{pt:0.4,color:P.border},autoPage:false});
+    const exTY=Math.max(qEndY+0.18,3.1);const exMax=Math.max(...exData.map(([,v])=>v),1);
+    s2.addText('WARUM AUSGESCHIEDEN?',{x:TX,y:exTY,w:5.0,h:0.2,fontSize:8.5,bold:true,color:P.muted});
+    const exLW=1.75,exBX=TX+exLW+0.04,exBW=2.75,exY0=exTY+0.26,exRH=0.32;
+    exData.slice(0,6).forEach(([reason,count],i)=>{const y=exY0+i*exRH,bw=(count/exMax)*exBW;
+      s2.addText(reason,{x:TX,y,w:exLW,h:0.25,fontSize:8.5,color:P.txt,valign:'middle',margin:0});
+      s2.addShape(pres.shapes.RECTANGLE,{x:exBX,y:y+0.04,w:exBW,h:0.18,fill:{color:'EEF1F7'},line:{color:P.border,pt:0.3}});
+      s2.addShape(pres.shapes.RECTANGLE,{x:exBX,y:y+0.04,w:bw,h:0.18,fill:{color:P.red,transparency:40},line:{color:P.red,pt:0.5}});
+      s2.addText(`${count}\u00d7`,{x:exBX+exBW+0.06,y,w:0.3,h:0.25,fontSize:8,color:P.muted,valign:'middle',margin:0});});
+    /* ── Slides 3+ ── */
+    const RPPT=17,eCW=[0.7,2.9,2.15,0.9,0.85,1.75],eHdrs=['Datum','Unternehmen','Position','Quelle','Status','Verlauf'];
+    const pages2=Math.max(Math.ceil(tblE.length/RPPT),1);
+    for(let pg=0;pg<pages2;pg++){const chunk=tblE.slice(pg*RPPT,(pg+1)*RPPT);
+      const sN=pres.addSlide();sN.background={color:P.white};
+      addHdr(sN,`Alle Eintr\u00e4ge (${pg+1}/${pages2})  \u00b7  Dipl.-Ing. Thorsten Blechmann`,`Stand: ${today}  \u00b7  ${tblE.length} Eintr\u00e4ge`);
+      const hR=eHdrs.map(h=>({text:h,options:{bold:true,fontSize:8.5,color:P.white,fill:{color:P.dark},valign:'middle'}}));
+      const dR=chunk.map((row,ri)=>{const[date,co,role,src,st,note]=row,bg=ri%2===0?P.white:'F7F9FC';return[
+        {text:date,options:{fontSize:8,color:P.muted,fill:{color:bg},align:'center',valign:'middle'}},
+        {text:co,  options:{fontSize:8.5,color:P.txt,fill:{color:bg},bold:true,valign:'middle'}},
+        {text:role,options:{fontSize:8,color:P.txt,fill:{color:bg},valign:'middle'}},
+        {text:src, options:{fontSize:8,color:P.muted,fill:{color:bg},align:'center',valign:'middle'}},
+        {text:st,  options:{fontSize:8,color:sCol(st),fill:{color:bg},bold:true,align:'center',valign:'middle'}},
+        {text:note,options:{fontSize:7,color:P.muted,fill:{color:bg},valign:'middle'}},
+      ];});
+      sN.addTable([hR,...dR],{x:0.2,y:0.52,w:9.6,rowH:0.24,colW:eCW,border:{pt:0.3,color:P.border},autoPage:false});}
+    const ds=new Date().toISOString().slice(0,10);
+    await pres.writeFile({fileName:`Bewerbungsnachweis_${ds}.pptx`});
+  }catch(err){alert('PPT-Fehler: '+err.message);console.error(err);}
+  finally{btn.textContent=orig;btn.disabled=false;}
+}
+
+function exportXLSX(){
+  const mainRows=entries.map(e=>{
+    const ld=lastDate(e);
+    return{'Datum (letzter Termin)':ld?new Date(ld):'','Unternehmen':e.company||'','Position':e.role||'','Quelle':e.source||'','Ort/Region':e.location||'','Gehaltsspanne':e.salary||'','Priorität':e.priority||'','Aktueller Status':SC[effectiveStatus(e)]?.label||effectiveStatus(e),'Interviews':countInterviews(e),'Vor-Ort-Termine':countOnsites(e),'Angebot':(e.history||[]).some(h=>h.type==='angebot')?'ja':'nein','Nachgefasst':wasFollowedUp(e)?'ja':'nein','Warum ausgeschieden?':e.exitReason||'','Notiz':e.note||'','Verlauf':(e.history||[]).map(h=>h.date+': '+(SC[h.type]?.label||h.type)+(h.note?' ('+h.note+')':'')).join(' → ')};
+  });
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.json_to_sheet(mainRows,{cellDates:true});
+  ws['!cols']=[{wch:13},{wch:38},{wch:34},{wch:14},{wch:24},{wch:28},{wch:9},{wch:18},{wch:10},{wch:14},{wch:8},{wch:11},{wch:22},{wch:40},{wch:70}];
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  for(let R=range.s.r+1;R<=range.e.r;R++){const cell=ws[XLSX.utils.encode_cell({r:R,c:0})];if(cell&&cell.v instanceof Date){cell.t='d';cell.z='dd.mm.yyyy';}}
+  XLSX.utils.book_append_sheet(wb,ws,'Bewerbungen');
+  const eventRows=[];
+  entries.forEach(e=>{(e.history||[]).forEach(h=>{eventRows.push({'Datum':h.date?new Date(h.date):'','Unternehmen':e.company||'','Termin-Typ':SC[h.type]?.label||h.type,'Notiz':h.note||'','Aktueller Status':SC[effectiveStatus(e)]?.label||''});});});
+  eventRows.sort((a,b)=>{if(a.Datum instanceof Date&&b.Datum instanceof Date)return b.Datum-a.Datum;return 0;});
+  const evWs=XLSX.utils.json_to_sheet(eventRows,{cellDates:true});
+  evWs['!cols']=[{wch:11},{wch:38},{wch:18},{wch:50},{wch:18}];
+  const evRange=XLSX.utils.decode_range(evWs['!ref']);
+  for(let R=evRange.s.r+1;R<=evRange.e.r;R++){const cell=evWs[XLSX.utils.encode_cell({r:R,c:0})];if(cell&&cell.v instanceof Date){cell.t='d';cell.z='dd.mm.yyyy';}}
+  XLSX.utils.book_append_sheet(wb,evWs,'Alle Termine');
+  const c=countByStatus();const active=activeEntries();
+  const iq=calcInterviewQuote();const voq=calcVorOrtQuote();const aq=calcAngebotsQuote();const rt=calcReaktionszeit();
+  const kpi=[
+    {'Kennzahl':'Gesamt (ohne Ausschlüsse)','Wert':active.length,'Soll':'','Basis':''},
+    {'Kennzahl':'Offen','Wert':c.open,'Soll':'','Basis':''},
+    {'Kennzahl':'Beworben','Wert':c.applied,'Soll':'','Basis':''},
+    {'Kennzahl':'Interview (aktiv)','Wert':c.interview,'Soll':'','Basis':''},
+    {'Kennzahl':'Vor-Ort (aktiv)','Wert':c.onsite,'Soll':'','Basis':''},
+    {'Kennzahl':'Angebot','Wert':c.angebot,'Soll':'','Basis':''},
+    {'Kennzahl':'Kein Feedback','Wert':c.nofeedback,'Soll':'','Basis':''},
+    {'Kennzahl':'Absagen','Wert':c.rejected,'Soll':'','Basis':''},
+    {'Kennzahl':'Nicht bewerben','Wert':c.excluded,'Soll':'','Basis':''},
+    {'Kennzahl':'KPI 1 Interviewquote','Wert':iq.pct+'%','Soll':'20%','Basis':iq.base+' Bewerbungen'},
+    {'Kennzahl':'KPI 2 Vor-Ort-Quote','Wert':voq.pct+'%','Soll':'40%','Basis':voq.base+' Interviews'},
+    {'Kennzahl':'KPI 3 Angebotsquote','Wert':aq.pct+'%','Soll':'>0%','Basis':aq.base+' Vor-Ort'},
+    {'Kennzahl':'KPI 4 Ø Reaktionszeit','Wert':rt.avg+'d','Soll':'','Basis':rt.n+' Prozesse'},
+  ];
+  const kpiWs=XLSX.utils.json_to_sheet(kpi);
+  kpiWs['!cols']=[{wch:36},{wch:14},{wch:10},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,kpiWs,'Übersicht');
+  XLSX.writeFile(wb,'Bewerbungen_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+/* ====== Backup System ====== */
+let unsavedChanges=parseInt(localStorage.getItem('bew_unsaved_count')||'0');
+let lastBackupISO=localStorage.getItem('bew_last_backup')||'';
+function markUnsaved(){unsavedChanges++;localStorage.setItem('bew_unsaved_count',unsavedChanges);updateBackupStatus();}
+function updateBackupStatus(){
+  const status=document.getElementById('backup-status');
+  const banner=document.getElementById('backup-banner');
+  const bannerText=document.getElementById('backup-banner-text');
+  if(!status||!banner)return;
+  let label='',cls='',bannerShown=false,bannerCrit=false;
+  if(!lastBackupISO){
+    label='kein Backup';cls='crit';
+    if(entries.length>0){bannerShown=true;bannerCrit=true;bannerText.textContent='Achtung: Noch nie ein Backup gespeichert. Bitte JETZT sichern.';}
+  } else {
+    const last=new Date(lastBackupISO);
+    const dateStr=last.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+' '+last.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    if(unsavedChanges===0){label='Backup '+dateStr;cls='';}
+    else if(unsavedChanges<5){label=unsavedChanges+' \u00c4nd. seit '+dateStr;cls='warn';}
+    else{label=unsavedChanges+' \u00c4nderungen ungesichert';cls='crit';bannerShown=true;bannerCrit=true;bannerText.textContent=unsavedChanges+' \u00c4nderungen seit dem letzten Backup vom '+dateStr+'. Bitte sichern.';}
+  }
+  status.textContent=label;
+  status.className='backup-status'+(cls?' '+cls:'');
+  banner.className='backup-banner'+(bannerShown?' show':'')+(bannerCrit?' crit':'');
+}
+function saveBackup(){
+  const data={version:'v7',exportedAt:new Date().toISOString(),entries};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  const ts=new Date().toISOString().slice(0,16).replace(':','-');
+  a.href=URL.createObjectURL(blob);a.download='bewerbungen_backup_'+ts+'.json';a.click();
+  lastBackupISO=new Date().toISOString();unsavedChanges=0;
+  localStorage.setItem('bew_last_backup',lastBackupISO);localStorage.setItem('bew_unsaved_count','0');
+  updateBackupStatus();
+}
+function loadBackup(){document.getElementById('backup-file-input').click();}
+function processBackupFile(file){
+  const reader=new FileReader();
+  reader.onload=(evt)=>{
+    try{
+      const data=JSON.parse(evt.target.result);
+      if(!data.entries||!Array.isArray(data.entries)){alert('Keine g\u00fcltigen Daten.');return;}
+      const msg='Backup laden?\n\n'+data.entries.length+' Bewerbungen\nExportiert: '+(data.exportedAt?new Date(data.exportedAt).toLocaleString('de-DE'):'unbekannt')+'\n\nAktuelle Daten werden \u00dcBERSCHRIEBEN.';
+      if(!confirm(msg))return;
+      entries=data.entries;
+      entries.forEach(e=>{if(e.exitReason===undefined)e.exitReason='';});
+      save();
+      lastBackupISO=new Date().toISOString();unsavedChanges=0;
+      localStorage.setItem('bew_last_backup',lastBackupISO);localStorage.setItem('bew_unsaved_count','0');
+      render();alert('Backup erfolgreich geladen.');
+    }catch(err){alert('Fehler: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+const _originalSave=save;
+save=function(){_originalSave();markUnsaved();};
+
+document.getElementById('backup-file-input').addEventListener('change',(e)=>{if(e.target.files&&e.target.files[0]){processBackupFile(e.target.files[0]);e.target.value='';}});
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Escape'){
+    if(document.getElementById('timeline-modal').classList.contains('show'))closeTimelineModal();
+    if(document.getElementById('edit-modal').classList.contains('show'))closeEditModal();
+  }
+});
+document.getElementById('timeline-modal').addEventListener('click',(e)=>{if(e.target.id==='timeline-modal')closeTimelineModal();});
+document.getElementById('edit-modal').addEventListener('click',(e)=>{if(e.target.id==='edit-modal')closeEditModal();});
+async function publishSnapshot(btn){
+  const orig=btn.textContent;
+  btn.textContent='Erstelle...';btn.disabled=true;
+  try{
+    const resp=await fetch(location.href);
+    if(!resp.ok)throw new Error('Datei nicht lesbar ('+resp.status+')');
+    let html=await resp.text();
+    const ts=new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    html=html.replace('const SC={','const BAKED_DATA='+JSON.stringify(entries)+';\nconst SC={');
+    html=html.replace("let entries=JSON.parse(localStorage.getItem('bew_v7')||'null');",'let entries=BAKED_DATA;');
+    html=html.replace("if(!entries){entries=SEED;localStorage.setItem('bew_v7',JSON.stringify(entries));}",'');
+    html=html.replace("function save(){localStorage.setItem('bew_v7',JSON.stringify(entries));}","function save(){}");
+    html=html.replace('</style>','.delete-btn,.timeline-btn,.excl-toggle,.backup-banner,.modal-backdrop{display:none!important}\n</style>');
+    html=html.replace(/<div class="header-actions">[\s\S]*?<\/header>/,'<div class="header-actions"><span style="font-family:var(--mono);font-size:12px;color:var(--text3)">Snapshot · Stand: '+ts+'</span></div></header>');
+    html=html.replace('<title>Bewerbungs-Dashboard','<title>Snapshot · Bewerbungs-Dashboard');
+    html=html.replace(/window\.addEventListener\('beforeunload'[\s\S]*?\}\);/,'');
+    const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='snapshot.html';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    btn.textContent='✓ Gespeichert';
+    setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},2500);
+  }catch(err){
+    alert('Snapshot-Fehler: '+err.message+'\n\nBitte die Datei in Chrome öffnen (nicht Firefox).');
+    btn.textContent=orig;btn.disabled=false;
+  }
+}
+updateBackupStatus();
+render();
+</script>
+</body>
+</html>
