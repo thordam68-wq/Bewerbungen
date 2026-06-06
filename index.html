@@ -153,8 +153,8 @@ tr.row-excluded td{opacity:0.38}
 .add-event-grid .form-group.full{grid-column:1/-1}
 /* Quellen-Analyse */
 .quellen-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:24px}
-.delete-btn,.timeline-btn,.excl-toggle,.backup-banner,.modal-backdrop{display:none!important}
-@media(max-width:900px){.kpi-row{grid-template-columns:repeat(4,1fr)}.perf-row{grid-template-columns:repeat(2,1fr)}.charts-row,.bottom-row,.quellen-grid{grid-template-columns:1fr}.main{padding:14px 16px}.app-header{padding:12px 16px;flex-wrap:wrap;gap:8px}.kpi-value,.perf-value{font-size:20px}.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}table{min-width:860px}}
+.delete-btn,.timeline-btn,.excl-toggle,.backup-banner,.modal-backdrop,.charts-row,.bottom-row .card:last-child{display:none!important}.bottom-row{grid-template-columns:1fr!important}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(4,1fr)}.perf-row{grid-template-columns:repeat(2,1fr)}.bottom-row,.quellen-grid{grid-template-columns:1fr}.main{padding:14px 16px}.app-header{padding:12px 16px;flex-wrap:wrap;gap:8px}.kpi-value,.perf-value{font-size:20px}.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}table{min-width:860px}}
 @media(max-width:500px){.kpi-row{grid-template-columns:repeat(2,1fr)}.kpi-value,.perf-value{font-size:18px}th{font-size:9px}td{font-size:11px;padding:7px 6px 7px 0}}
 </style>
 </head>
@@ -246,7 +246,7 @@ tr.row-excluded td{opacity:0.38}
     <h1>Bewerbungs-Dashboard</h1>
     <span>Thorsten Blechmann — Aktive Jobsuche 2026</span>
   </div>
-  <div class="header-actions"><span style="font-family:var(--mono);font-size:12px;color:var(--text3)">Snapshot · Stand: 06.06.2026, 16:19</span></div></header>
+  <div class="header-actions"><span style="font-family:var(--mono);font-size:12px;color:var(--text3)">Snapshot · Stand: 06.06.2026, 16:25</span></div></header>
 
 <main class="main">
   <div class="backup-banner" id="backup-banner">
@@ -1074,13 +1074,13 @@ function publishSnapshot(btn){
       html=html.replace("let entries=JSON.parse(localStorage.getItem('bew_v7')||'null');",'let entries=typeof BAKED_DATA!=="undefined"?BAKED_DATA:[];');
       html=html.replace("if(!entries){entries=SEED;localStorage.setItem('bew_v7',JSON.stringify(entries));}",'');
       html=html.replace("function save(){localStorage.setItem('bew_v7',JSON.stringify(entries));}","function save(){}");
-      html=html.replace('</style>','.delete-btn,.timeline-btn,.excl-toggle,.backup-banner,.modal-backdrop{display:none!important}\n@media(max-width:900px){.kpi-row{grid-template-columns:repeat(4,1fr)}.perf-row{grid-template-columns:repeat(2,1fr)}.charts-row,.bottom-row,.quellen-grid{grid-template-columns:1fr}.main{padding:14px 16px}.app-header{padding:12px 16px;flex-wrap:wrap;gap:8px}.kpi-value,.perf-value{font-size:20px}.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}table{min-width:860px}}\n@media(max-width:500px){.kpi-row{grid-template-columns:repeat(2,1fr)}.kpi-value,.perf-value{font-size:18px}th{font-size:9px}td{font-size:11px;padding:7px 6px 7px 0}}\n</style>');
+      html=html.replace('</style>','.delete-btn,.timeline-btn,.excl-toggle,.backup-banner,.modal-backdrop,.charts-row,.bottom-row .card:last-child{display:none!important}.bottom-row{grid-template-columns:1fr!important}\n@media(max-width:900px){.kpi-row{grid-template-columns:repeat(4,1fr)}.perf-row{grid-template-columns:repeat(2,1fr)}.bottom-row,.quellen-grid{grid-template-columns:1fr}.main{padding:14px 16px}.app-header{padding:12px 16px;flex-wrap:wrap;gap:8px}.kpi-value,.perf-value{font-size:20px}.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}table{min-width:860px}}\n@media(max-width:500px){.kpi-row{grid-template-columns:repeat(2,1fr)}.kpi-value,.perf-value{font-size:18px}th{font-size:9px}td{font-size:11px;padding:7px 6px 7px 0}}\n</style>');
       html=html.replace(/<div class="header-actions">[\s\S]*?<\/header>/,'<div class="header-actions"><span style="font-family:var(--mono);font-size:12px;color:var(--text3)">Snapshot · Stand: '+ts+'</span></div></header>');
       html=html.replace('<title>Bewerbungs-Dashboard','<title>Snapshot · Bewerbungs-Dashboard');
       html=html.replace(/window\.addEventListener\('beforeunload'[\s\S]*?\}\);/,'');
       const blob=new Blob([html],{type:'text/html;charset=utf-8'});
       const a=document.createElement('a');
-      a.href=URL.createObjectURL(blob);a.download='snapshot.html';
+      a.href=URL.createObjectURL(blob);a.download='bew-snapshot.html';
       document.body.appendChild(a);a.click();document.body.removeChild(a);
       setTimeout(()=>URL.revokeObjectURL(a.href),1000);
       btn.textContent='✓ Gespeichert ('+entries.length+' Einträge)';
