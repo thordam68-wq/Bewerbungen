@@ -155,6 +155,8 @@ tr.row-excluded td{opacity:0.38}
 /* Quellen-Analyse */
 .quellen-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:24px}
 .delete-btn,.timeline-btn,.excl-toggle,.backup-banner,.modal-backdrop{display:none!important}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(4,1fr)}.perf-row{grid-template-columns:repeat(2,1fr)}.charts-row,.bottom-row,.quellen-grid{grid-template-columns:1fr}.main{padding:14px 16px}.app-header{padding:12px 16px;flex-wrap:wrap;gap:8px}.kpi-value,.perf-value{font-size:20px}}
+@media(max-width:500px){.kpi-row{grid-template-columns:repeat(2,1fr)}.kpi-value,.perf-value{font-size:18px}th{font-size:9px}td{font-size:11px;padding:7px 6px 7px 0}}
 </style>
 </head>
 <body>
@@ -245,7 +247,7 @@ tr.row-excluded td{opacity:0.38}
     <h1>Bewerbungs-Dashboard</h1>
     <span>Thorsten Blechmann — Aktive Jobsuche 2026</span>
   </div>
-  <div class="header-actions"><span style="font-family:var(--mono);font-size:12px;color:var(--text3)">Snapshot · Stand: 06.06.2026, 15:27</span></div></header>
+  <div class="header-actions"><span style="font-family:var(--mono);font-size:12px;color:var(--text3)">Snapshot · Stand: 06.06.2026, 15:57</span></div></header>
 
 <main class="main">
   <div class="backup-banner" id="backup-banner">
@@ -1070,7 +1072,7 @@ async function publishSnapshot(btn){
     html=html.replace("let entries=JSON.parse(localStorage.getItem('bew_v7')||'null');",'let entries=BAKED_DATA;');
     html=html.replace("if(!entries){entries=SEED;localStorage.setItem('bew_v7',JSON.stringify(entries));}",'');
     html=html.replace("function save(){localStorage.setItem('bew_v7',JSON.stringify(entries));}","function save(){}");
-    html=html.replace('</style>','.delete-btn,.timeline-btn,.excl-toggle,.backup-banner,.modal-backdrop{display:none!important}\n</style>');
+    html=html.replace('</style>','.delete-btn,.timeline-btn,.excl-toggle,.backup-banner,.modal-backdrop{display:none!important}\n@media(max-width:900px){.kpi-row{grid-template-columns:repeat(4,1fr)}.perf-row{grid-template-columns:repeat(2,1fr)}.charts-row,.bottom-row,.quellen-grid{grid-template-columns:1fr}.main{padding:14px 16px}.app-header{padding:12px 16px;flex-wrap:wrap;gap:8px}.kpi-value,.perf-value{font-size:20px}}\n@media(max-width:500px){.kpi-row{grid-template-columns:repeat(2,1fr)}.kpi-value,.perf-value{font-size:18px}th{font-size:9px}td{font-size:11px;padding:7px 6px 7px 0}}\n</style>');
     html=html.replace(/<div class="header-actions">[\s\S]*?<\/header>/,'<div class="header-actions"><span style="font-family:var(--mono);font-size:12px;color:var(--text3)">Snapshot · Stand: '+ts+'</span></div></header>');
     html=html.replace('<title>Bewerbungs-Dashboard','<title>Snapshot · Bewerbungs-Dashboard');
     html=html.replace(/window\.addEventListener\('beforeunload'[\s\S]*?\}\);/,'');
